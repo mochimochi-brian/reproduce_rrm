@@ -1,0 +1,252 @@
+# Faster generate_rrm for generate_rrm_v11.g (same API; Au5Ag dat bytes match).
+# Not a new Teramoto version: v11 stays the original script.
+# Sequential: vertex id is offset[eq] + PositionCanonical(rt[eq], g), matching
+# v11's Position(vertices, [eq, CanonicalRightCosetElement(...)]) because
+# vertices are appended in RightTransversal order. Edges are written with
+# OutputTextFile inside the TS loop; the full edge list is not kept. Same-EQ
+# Pechukas uses a cached RightTransversal. A failed coset lookup prints an
+# error and FORCE_QUIT_GAP(1) (v11 would Print the string fail into the dat
+# file and still exit 0). GAP's Error() returns under -T, so it is not a
+# batch stop. A Pechukas violation also FORCE_QUIT_GAP(1) before writing dat
+# files. Set RRM_CONTINUE_ON_PECHUKAS=1 (or GAP variable
+# RRM_CONTINUE_ON_PECHUKAS:=true) to restore v11 print-and-continue.
+#
+# vfile : file to save vertex information
+# efile : file to save edge information
+# sym : sym_Omega
+# ur, urt : list of U(r_R)s and U(r_T)s
+# ss : list of [[i,s1],[j,s2]] (i, j: indices of equilibrium structures, s1 and s2 are permutation from the equilibrium structures)
+# labels : vertex (edge) label is attached if true and is not otherwise
+
+RrmVertexIndex:=function(offset, rt, eq, g)
+	local pos;
+	pos:=PositionCanonical(rt[eq], g);
+	if pos=fail then
+		# Error() returns under gap -T; FORCE_QUIT_GAP is the batch stop.
+		Print("Error, vertex lookup failed for EQ",eq-1,"\n");
+		FORCE_QUIT_GAP(1);
+	fi;
+	return offset[eq]+pos;
+end;;
+
+if not IsBound(RRM_CONTINUE_ON_PECHUKAS) then
+	RRM_CONTINUE_ON_PECHUKAS:=false;
+fi;
+
+RrmContinueOnPechukas:=function()
+	local v;
+	if RRM_CONTINUE_ON_PECHUKAS=true or RRM_CONTINUE_ON_PECHUKAS=1 then
+		return true;
+	fi;
+	if IsBound(GAPInfo.SystemEnvironment) and
+		IsBound(GAPInfo.SystemEnvironment.RRM_CONTINUE_ON_PECHUKAS) then
+		v:=GAPInfo.SystemEnvironment.RRM_CONTINUE_ON_PECHUKAS;
+		return v="1" or LowercaseString(v)="true" or LowercaseString(v)="yes";
+	fi;
+	return false;
+end;;
+
+RrmOnPechukasViolation:=function()
+	if RrmContinueOnPechukas() then
+		return;
+	fi;
+	Print("Error, Pechukas theorem violated; refusing to write dat files\n");
+	FORCE_QUIT_GAP(1);
+end;;
+
+RrmBuildTransversals:=function(sym, ur)
+	local rt, offset, nvert, i;
+	rt:=[];
+	offset:=[];
+	nvert:=0;
+	for i in [1..Length(ur)] do
+		rt[i]:=RightTransversal(sym,ur[i]);
+		offset[i]:=nvert;
+		nvert:=nvert+Length(rt[i]);
+	od;
+	return rec(rt:=rt, offset:=offset, nvert:=nvert);
+end;;
+
+RrmCheckPechukas:=function(sym, ur, urt, ss, org_eq, org_ts, rt)
+	local homByEq, i, eq, actionHom, permGroup, pos1, pos2, stabPerm, stabEQs;
+	homByEq:=[];
+	# check if GRRM graph is consistent with the required symmetry.
+	for i in [1..Length(ss)] do
+		# In this case, the reactant and product are permutation isomers.
+		if ss[i][1][1] = ss[i][2][1] then
+			eq:=ss[i][1][1];
+			if not IsBound(homByEq[eq]) then
+				homByEq[eq]:=ActionHomomorphism(sym,rt[eq],OnRight,"surjective");
+			fi;
+			actionHom:=homByEq[eq];
+			permGroup:=Image(actionHom);
+			pos1:=PositionCanonical(rt[eq],ss[i][1][2]^-1);
+			pos2:=PositionCanonical(rt[eq],ss[i][2][2]^-1);
+			if pos1=fail or pos2=fail then
+				Print("Error, Pechukas coset lookup failed for TS",i-1,"\n");
+				FORCE_QUIT_GAP(1);
+			fi;
+			stabPerm:=Stabilizer(permGroup,Set([pos1,pos2]),OnSets);
+			stabEQs:=PreImage(actionHom,stabPerm);
+			if not IsSubgroup(stabEQs,urt[i]) then
+				Assert(0,false,"Violation of Pechukus theorem: \n");
+	        		if org_ts[i] = i then
+					Print("TS",i-1,":\n");
+				else
+					Print("TS",i-1,"*:\n");
+				fi;
+
+				Print("the reactant and product are permutation isomers\n");
+                        	if org_eq[ss[i][1][1]]=ss[i][1][1] then
+					Print("EQ",org_eq[ss[i][1][1]]-1,"\n");
+				else
+					Print("EQ",org_eq[ss[i][1][1]]-1,"*\n");
+				fi;
+
+				Print("in what follows, minus 1 to convert to the atom labels\n");
+				Print("U(r) (for reactant):\n");
+				Print(ur[ss[i][1][1]],"\n");
+				Print("U(r) (for product):\n");
+				Print(ur[ss[i][2][1]],"\n");
+				Print("stabEQs:\n");
+				Print(stabEQs,"\n");
+				Print("U(r) (for transition state):\n");
+				Print(urt[i],"\n");
+				RrmOnPechukasViolation();
+			fi;
+		# In this case, the reactant and product are not.
+		else
+			if not IsSubgroup(ConjugateGroup(ur[ss[i][1][1]],ss[i][1][2]),urt[i]) or
+				not IsSubgroup(ConjugateGroup(ur[ss[i][2][1]],ss[i][2][2]),urt[i]) then
+
+				Assert(0,false,"Violation of Pechukus theorem: \n");
+	        		if org_ts[i] = i then
+					Print("TS",i-1,":\n");
+				else
+					Print("TS",i-1,"*:\n");
+				fi;
+
+				Print("reactant:\n");
+                        	if org_eq[ss[i][1][1]]=ss[i][1][1] then
+					Print("EQ",org_eq[ss[i][1][1]]-1,"\n");
+				else
+					Print("EQ",org_eq[ss[i][1][1]]-1,"*\n");
+				fi;
+
+				Print("product:\n");
+                        	if org_eq[ss[i][2][1]]=ss[i][2][1] then
+					Print("EQ",org_eq[ss[i][2][1]]-1,"\n");
+				else
+					Print("EQ",org_eq[ss[i][2][1]]-1,"*\n");
+				fi;
+
+				Print("in what follows, minus 1 to convert to the atom labels\n");
+				Print("U(r) (for reactant):\n");
+				Print(ConjugateGroup(ur[ss[i][1][1]],ss[i][1][2]),"\n");
+				Print("U(r) (for product):\n");
+				Print(ConjugateGroup(ur[ss[i][2][1]],ss[i][2][2]),"\n");
+				Print("U(r) (for transition state):\n");
+				Print(urt[i],"\n");
+				RrmOnPechukasViolation();
+			fi;
+		fi;
+	od;
+end;;
+
+RrmWriteVertices:=function(vfile, ur, org_eq, rt, vlabel)
+	local vstream, vid, ind, i, rturi, canon;
+	vstream:=OutputTextFile(vfile,false);
+	if vstream=fail then
+		Print("Error, cannot write ",vfile,"\n");
+		FORCE_QUIT_GAP(1);
+	fi;
+	SetPrintFormattingStatus(vstream,false);
+	vid:=0;
+	ind:=0;
+	for i in [1..Length(ur)] do
+		for rturi in rt[i] do
+			vid:=vid+1;
+			if ind <> i then
+				if ind <> 0 then
+					AppendTo(vstream,"}\n");
+				fi;
+
+				if org_eq[i]=i then
+					AppendTo(vstream,"subgraph cluster_",i-1," { label=\"",org_eq[i]-1,"\";\n");
+				else
+					AppendTo(vstream,"subgraph cluster_",i-1," { label=\"",org_eq[i]-1,"*\";\n");
+				fi;
+
+				AppendTo(vstream,"fontsize=\"30pt\"\n");
+				ind:=i;
+			fi;
+
+			canon:=CanonicalRightCosetElement(ur[i],rturi);
+			if vlabel then
+				if org_eq[i]=i then
+					AppendTo(vstream,vid,"[label=\"",org_eq[i]-1," ",canon^-1,"\"]\n");
+				else
+					AppendTo(vstream,vid,"[label=\"",org_eq[i]-1,"* ",canon^-1,"\"]\n");
+				fi;
+			else
+				AppendTo(vstream,vid,"\n");
+			fi;
+		od;
+	od;
+	AppendTo(vstream,"}\n");
+	CloseStream(vstream);
+end;;
+
+RrmWriteEdges:=function(efile, sym, urt, ss, org_ts, rt, offset, elabel, lo, hi)
+	local estream, i, rturti, id1, id2, canon;
+	estream:=OutputTextFile(efile,false);
+	if estream=fail then
+		Print("Error, cannot write ",efile,"\n");
+		FORCE_QUIT_GAP(1);
+	fi;
+	SetPrintFormattingStatus(estream,false);
+	if lo<=hi then
+		if lo<1 or hi>Length(ss) then
+			Print("Error, TS slice out of range\n");
+			FORCE_QUIT_GAP(1);
+		fi;
+		for i in [lo..hi] do
+			for rturti in RightTransversal(sym,urt[i]) do
+				id1:=RrmVertexIndex(offset,rt,ss[i][1][1],ss[i][1][2]^-1*rturti);
+				id2:=RrmVertexIndex(offset,rt,ss[i][2][1],ss[i][2][2]^-1*rturti);
+				canon:=CanonicalRightCosetElement(urt[i],rturti);
+				if elabel then
+					if org_ts[i]=i then
+						AppendTo(estream,id1,"--",id2,"[label=\"",org_ts[i]-1," ",canon^-1,"\"]\n");
+					else
+						AppendTo(estream,id1,"--",id2,"[label=\"",org_ts[i]-1,"* ",canon^-1,"\"]\n");
+					fi;
+				else
+					AppendTo(estream,id1,"--",id2,"\n");
+				fi;
+			od;
+		od;
+	fi;
+	CloseStream(estream);
+end;;
+
+generate_rrm:=function(vfile, efile, sym, ur, urt, ss, org_eq, org_ts, labels...)
+	local vlabel, elabel, built;
+
+	if Length(labels)=0 then
+		vlabel:=true;
+		elabel:=true;
+	elif Length(labels)=1 then
+		vlabel:=labels[1];
+		elabel:=true;
+	else
+		vlabel:=labels[1];
+		elabel:=labels[2];
+	fi;
+
+	built:=RrmBuildTransversals(sym, ur);
+	RrmCheckPechukas(sym, ur, urt, ss, org_eq, org_ts, built.rt);
+	RrmWriteVertices(vfile, ur, org_eq, built.rt, vlabel);
+	RrmWriteEdges(efile, sym, urt, ss, org_ts, built.rt, built.offset, elabel, 1, Length(ss));
+	return;
+end;;

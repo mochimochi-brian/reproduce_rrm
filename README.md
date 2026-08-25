@@ -45,26 +45,47 @@ it indicates that the resulting RRM in shape space has `n` connected components 
 
 ## Constitution of the code
 * Core Python script `rrm_reconstruction_v18.py` that handles parsing GRRM output and preparing data
-* GAP script `generate_rrm_v11.g` that performs group-theoretic computations
+* GAP script `generate_rrm_v11.g` that performs group-theoretic computations (original)
+* Faster sequential GAP script `generate_rrm_v11_fast.g` (same `generate_rrm` API as v11: O(1) vertex index, streamed writes, fail-closed Pechukas; not a later Teramoto version)
 * Helper Python script for validation `check_number_of_edges_v3.py`
 * Shell script to tie it all together `reproduce_rrm_demo.sh`
 
+The intended product of the GAP step is the labeled files `vertices_*.dat` and `edges_*.dat`: each vertex is an EQ (or its inversion isomer) plus a CNPI permutation, and each edge is a TS plus a permutation. The Graphviz DOT/PNG is a convenience for small maps, not the reconstruction itself. See [Scale of the labeled map](#scale-of-the-labeled-map) for when those dat files stop being a practical artifact.
+
 ## Advanced Usage
 1. Run the Python preprocessing: python3 rrm_reconstruction_v18.py <EQ_list.log> <TS_list.log> <TS_file_prefix> <output.g> – this generates a GAP script with symmetry information (stored as <output.g>).
-2. Run GAP on the generated script to compute the RRM graph data: gap -b -q -m 12g generate_rrm_v11.g (with the appropriate memory flag). This will produce vertices_*.dat and edges_*.dat files.
-3. Combine the output into a Graphviz file and render it: The demo script automates this using cat and calling dot. If doing manually, you would take the contents of the .dat files and format them into a DOT file (see the script for the exact steps) and then run Graphviz’s dot -Tpng to get an image.
+2. Run GAP on the generated script to compute the RRM graph data: `gap -b -q -m 12g generate_rrm_v11_fast.g` (or `generate_rrm_v11.g`; use the appropriate memory flag). This will produce vertices_*.dat and edges_*.dat files. The demo script still runs a single GAP process.
+3. Combine the output into a Graphviz file and render it: The demo script automates this using cat and calling `dot`. If doing manually, you would take the contents of the .dat files and format them into a DOT file (see the script for the exact steps) and then run Graphviz’s `dot -Tpng` to get an image. Skip this step when the labeled graph is large; `dot` is optional and will fail or take prohibitive time well before GAP itself does.
 
 ## Options
 * `vlabel = true or false`, if it is set to true, the vertex labels are included in the file `rrm_Au5Ag_AFIR.dot`. Each vertex label comprises the corresponding EQ number n (EQn in the input file \*EQ_list.log) or n\* if it is an inversion isomer of EQn, and the permutation from the reference structure (EQn or EQn*). 
 * `elabel = true or false`, if it is set to true, the edge labels are included in the file `rrm_Au5Ag_AFIR.dot`. Each edge label comprises the corresponding TS number n (TSn in the input file \*TS_list.log) or n\* if it is an inversion isomer of TSn, and the permutation from the reference structures (TSn or TSn*).
+* `RRM_CONTINUE_ON_PECHUKAS`: `generate_rrm_v11_fast.g` stops with a non-zero GAP exit and does not write dat files if a path violates Pechukas's theorem. Set the environment variable `RRM_CONTINUE_ON_PECHUKAS=1`, or in GAP `RRM_CONTINUE_ON_PECHUKAS:=true;;` before `generate_rrm`, to restore the v11 print-and-continue behavior (needed for the AuCu4 demonstration below).
+
+## Scale of the labeled map
+The number of labeled vertices is on the order of (number of EQs) times |CNPI| / |point group of the EQ|. For a monometallic cluster the CNPI group contains S_n (and S_n x Z_2 when inversion copies are distinct), so the files grow as n!. Mixed-element maps are much cheaper: they use a Young subgroup of S_n. The bundled Au5Ag example has six atoms but only five identical gold atoms, and the labeled files are small (~1.7e3 vertices, ~1.0e4 edges, a few hundred kB).
+
+The table is an order of magnitude for **monometallic** maps with a GRRM catalogue similar to Au7–Au8 AFIR (tens of EQs, about 10^2 TSs). It is the scale at which the dat files stop being a practical artifact, not a guarantee that every map of size n will fit.
+
+| identical atoms n | order of S_n | typical labeled graph | usable as `vertices_*.dat` / `edges_*.dat`? |
+|---|---|---|---|
+| 7 (measured Au7 AFIR; not bundled here) | 5e3 | ~1e5 vertices, ~7e5 edges, tens of MB of text | yes |
+| 8 | 4e4 | ~1e6 vertices, ~1e7 edges, hundreds of MB | intended, with `generate_rrm_v11_fast.g` |
+| 9 | 4e5 | ~1e7–1e8 edges, a few GB | maybe: streamed writes, raise GAP `-m`, do not run `dot` |
+| 10 | 4e6 | ~1e9 edges, tens of GB of text | not a practical artifact |
+| 12 | 5e8 | cannot materialize | no |
+
+That Au7 expansion is about 3 MB of vertices and 26 MB of edges; the rendered PNG is hundreds of MB. Skip Graphviz `dot` for maps in that range and above. For maps that still fit on disk, increase the memory available to GAP with `-m` (the examples use `-m 12g`). Details: [GAP documentation](https://www.gap-system.org/). The paper (see [How to Cite](#how-to-cite)) describes the reconstruction; this table is only about file size.
+
+The helper `check_number_of_edges_v3.py` reads the whole DOT file into memory. Checking n=8+ outputs would need a streaming rewrite of that script; it is not required for writing the dat files.
 
 ## Limitations
 * Sample data of GRRM output is in the directory Metal. The files required are `***EQ_list.log`, `***TS_list.log`, and `***TSn.log` (`n` is the indices of the transition states.).
 * As mentioned in the paper, the code does not support RRMs that include DC (dissociation channel) states or saddle connections.
 * The current version of the code only accept the connected RRMs as inputs (otherwise the assertion error `assert nx.is_connected(G)` occurs in rrm_reconstruction_v18.py.
-* The GAP program may stop with an error if the input molecule is too large. In this case, consider increasing the memory available to GAP. For details, see the GAP documentation. (https://www.gap-system.org/)
-* If the resulting RRM in shape space is too big, it may take a while for Graphviz to visualize the graph. In that case, you might want to consider changing the options of the visualization or using other software to visualize.
-* If the GRRM output contains reaction paths that violate [Pechukas's theorem](https://pubs.aip.org/aip/jcp/article-abstract/64/4/1516/786979/On-simple-saddle-points-of-a-potential-surface-the) (and [its extension (Hiroshi Teramoto, Pontential Energy Function, symmetry and its consequences, in Japanese)](https://www.jstc.org/frontier15/)), the code will throw an assertion error. For example, in the provided AuCu4 sample, TS8 and TS16 produce such errors​:
+* If GAP stops because the input molecule is large but the map is still in the materializable range above, increase `-m`. If the labeled graph is past that range, do not expect dat files; see [Scale of the labeled map](#scale-of-the-labeled-map).
+* If the resulting RRM in shape space is too big, skip Graphviz rather than waiting on `dot`. Edit the DOT file, extract graph properties, or use other software. The demo’s `dot` step is optional.
+* If the GRRM output contains reaction paths that violate [Pechukas's theorem](https://pubs.aip.org/aip/jcp/article-abstract/64/4/1516/786979/On-simple-saddle-points-of-a-potential-surface-the) (and [its extension (Hiroshi Teramoto, Pontential Energy Function, symmetry and its consequences, in Japanese)](https://www.jstc.org/frontier15/)), `generate_rrm_v11_fast.g` prints the diagnostic and exits non-zero **without writing** `vertices_*.dat` / `edges_*.dat`. `generate_rrm_v11.g` still prints and continues. For example, in the provided AuCu4 sample, TS8 and TS16 produce such errors. With `RRM_CONTINUE_ON_PECHUKAS=1` the messages look like:
 
 ```
 Violation of Pechukus theorem:
@@ -95,7 +116,7 @@ U(r) (for transition state):
 Group( [ (2,3)(4,5), (2,4)(3,5), (2,5)(3,4), () ] )
 GAP computation done.
 ```
-This is expected for that dataset (it indicates a certain kind of symmetry issue in the reaction network). If this occurs, the results are not guaranteed to be correct – you should carefully examine your GRRM output in such cases.
+This is expected for that dataset (it indicates a certain kind of symmetry issue in the reaction network). If this occurs, the results are not guaranteed to be correct – you should carefully examine your GRRM output in such cases. Without the continue flag, GAP stops at the first violation (TS8 for AuCu4) and does not present the dat files as success.
 
 ## Important Parameters
 * tolerance - Distance tolerance to consider sites as symmetrically equivalent in rrm_reconstruction_v18.py
@@ -107,8 +128,8 @@ This is expected for that dataset (it indicates a certain kind of symmetry issue
 * Put all the output files of GRRM, `${MOL}_AFIR_EQ_list.log`, `${MOL}_AFIR_TS_list.log`, `${MOL}_AFIR_TSn.log` (`n` is supposed to be the indices of the transition states.) under the directory.
 * Modify `MOL=${MOL}` in the `reproduce_rrm_demo.sh`.
 * Run `./reproduce_rrm_demo.sh`.
-* Watch out warnings and errors. If Assertion error occurred, it indicates there is a bug in this code (in that case, kindly report the bug to us!) or there is a problem in your GRRM output (like the case AuCu4 mentioned above, we observed the violation of Pechukas theorem occurred in case if Vallay-Ridge transitions occur in the middle of a reaction path or other possibly more primitive error.). This code can also used to verify your GRRM output.
-* If the code ran successfuly, it will output `rrm_${MOL}_AFIR.dot` and `rrm_${MOL}_AFIR.png` (and `data/${MOL}_AFIR.g` for an intermediate file). If the png figure is too complicated to show, consider extracting some features of the graph from the Graphviz DOT file. For example, we use persistent homology to extract some features of output graphs.
+* Watch out warnings and errors. If Assertion error occurred, it indicates there is a bug in this code (in that case, kindly report the bug to us!) or there is a problem in your GRRM output (like the case AuCu4 mentioned above, we observed the violation of Pechukas theorem occurred in case if Vallay-Ridge transitions occur in the middle of a reaction path or other possibly more primitive error.). With `generate_rrm_v11_fast.g` that Pechukas case is a non-zero GAP exit unless `RRM_CONTINUE_ON_PECHUKAS=1`. This code can also used to verify your GRRM output.
+* If the code ran successfuly, it will output `vertices_${MOL}_AFIR.dat` and `edges_${MOL}_AFIR.dat` (the labeled reconstruction), plus `rrm_${MOL}_AFIR.dot` and `rrm_${MOL}_AFIR.png` if you keep the demo’s `dot` step (and `data/${MOL}_AFIR.g` for an intermediate file). Skip `dot` when the labeled graph is large; see [Scale of the labeled map](#scale-of-the-labeled-map). If the png figure is too complicated to show, consider extracting some features of the graph from the Graphviz DOT file. For example, we use persistent homology to extract some features of output graphs.
 
 ## How to Cite: 
 If you use this code, please cite the following publication: Hiroshi Teramoto et al., J. Chem. Theory Comput. 2023, 19, 17, 5886–5896.
