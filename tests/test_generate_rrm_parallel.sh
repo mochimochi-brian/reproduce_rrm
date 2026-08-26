@@ -74,6 +74,117 @@ if [[ "$reaped" -ne 1 ]]; then
 fi
 echo "kill-pids ok"
 
+fake_gap="$OUT/fake_gap.sh"
+cat >"$fake_gap" <<'FAKE'
+#!/bin/bash
+set -euo pipefail
+input=$(cat)
+if [[ "$input" == *generate_rrm_vertices* ]]; then
+    echo "RRM_NVERT=1"
+    echo "RRM_NTS=${FAKE_NTS:-8}"
+    exit 0
+fi
+if [[ "$input" == *generate_rrm_edge_shard* ]]; then
+    echo started >>"${FAKE_STARTS:?}"
+    if [[ -n "${FAKE_FAIL_PART0:-}" && "$input" == *'.part.0'* ]]; then
+        exit 1
+    fi
+    echo $$ >>"${FAKE_PIDS:?}"
+    exec sleep 61
+fi
+exit 0
+FAKE
+chmod +x "$fake_gap"
+dummy_g="$OUT/dummy.g"
+: >"$dummy_g"
+
+echo "== TERM during launch must not start more workers =="
+term_dir="$OUT/term"
+mkdir -p "$term_dir"
+export FAKE_STARTS="$term_dir/starts"
+export FAKE_PIDS="$term_dir/wpids"
+: >"$FAKE_STARTS"
+: >"$FAKE_PIDS"
+unset FAKE_FAIL_PART0
+set +e
+RRM_TEST_LAUNCH_DELAY=1 GAP="$fake_gap" MEM=1g GAP_WORKERS=4 \
+    "$DRIVER" "$term_dir/v.dat" "$term_dir/e.dat" "$dummy_g" \
+    >"$term_dir/out.log" 2>&1 &
+term_drv=$!
+i=0
+while [[ $i -lt 30 && ! -s "$FAKE_STARTS" ]]; do
+    sleep 0.1
+    i=$((i + 1))
+done
+sleep 0.2
+kill -TERM "$term_drv" 2>/dev/null || true
+wait "$term_drv" 2>/dev/null
+term_rc=$?
+set -e
+starts=$(grep -c started "$FAKE_STARTS" || true)
+if [[ "$starts" -gt 1 ]]; then
+    echo "TERM returned into the launch loop (starts=$starts)" >&2
+    cat "$term_dir/out.log" >&2
+    exit 1
+fi
+if [[ "$term_rc" -eq 0 ]]; then
+    echo "expected nonzero exit after TERM" >&2
+    exit 1
+fi
+if [[ -s "$FAKE_PIDS" ]]; then
+    while read -r wpid; do
+        kill "$wpid" 2>/dev/null || true
+        wait "$wpid" 2>/dev/null || true
+    done <"$FAKE_PIDS"
+fi
+echo "TERM stops launch ok (starts=$starts exit $term_rc)"
+
+echo "== one worker failure must cancel siblings =="
+fail_dir="$OUT/failfast"
+mkdir -p "$fail_dir"
+export FAKE_STARTS="$fail_dir/starts"
+export FAKE_PIDS="$fail_dir/wpids"
+export FAKE_NTS=6
+export FAKE_FAIL_PART0=1
+: >"$FAKE_STARTS"
+: >"$FAKE_PIDS"
+unset RRM_TEST_LAUNCH_DELAY
+set +e
+t0=$(date +%s)
+GAP="$fake_gap" MEM=1g GAP_WORKERS=3 \
+    "$DRIVER" "$fail_dir/v.dat" "$fail_dir/e.dat" "$dummy_g" \
+    >"$fail_dir/out.log" 2>&1
+fail_rc=$?
+t1=$(date +%s)
+set -e
+elapsed=$((t1 - t0))
+if [[ "$fail_rc" -eq 0 ]]; then
+    echo "expected nonzero when a shard fails" >&2
+    cat "$fail_dir/out.log" >&2
+    exit 1
+fi
+if [[ "$elapsed" -ge 8 ]]; then
+    echo "siblings were not cancelled (${elapsed}s)" >&2
+    cat "$fail_dir/out.log" >&2
+    exit 1
+fi
+alive=0
+if [[ -s "$FAKE_PIDS" ]]; then
+    while read -r wpid; do
+        state=$(ps -o state= -p "$wpid" 2>/dev/null || true)
+        if [[ -n "$state" && "$state" != *Z* ]]; then
+            alive=1
+        fi
+        wait "$wpid" 2>/dev/null || true
+    done <"$FAKE_PIDS"
+fi
+if [[ "$alive" -ne 0 ]]; then
+    echo "sibling workers still running after a shard failure" >&2
+    exit 1
+fi
+echo "sibling cancel ok (${elapsed}s exit $fail_rc)"
+unset FAKE_STARTS FAKE_PIDS FAKE_NTS FAKE_FAIL_PART0
+
 seq_v="$OUT/seq_v.dat"
 seq_e="$OUT/seq_e.dat"
 w1_v="$OUT/w1_v.dat"

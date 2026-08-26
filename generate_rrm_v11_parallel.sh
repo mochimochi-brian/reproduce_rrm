@@ -185,7 +185,19 @@ pids=()
 rrm_cleanup_workers() {
     rrm_kill_pids "${pids[@]:-}"
 }
-trap rrm_cleanup_workers EXIT INT TERM
+rrm_reap_pids() {
+    local pid
+    for pid in "${pids[@]:-}"; do
+        wait "$pid" 2>/dev/null || true
+    done
+}
+rrm_on_cancel() {
+    rrm_cleanup_workers
+    rrm_reap_pids
+    exit 143
+}
+trap rrm_cleanup_workers EXIT
+trap rrm_on_cancel INT TERM
 
 worker_logs=()
 w=0
@@ -204,13 +216,21 @@ QUIT;
 EOF
     pids+=($!)
     w=$((w + 1))
+    if [[ "${RRM_TEST_LAUNCH_DELAY:-0}" != 0 ]]; then
+        sleep "$RRM_TEST_LAUNCH_DELAY"
+    fi
 done
 
 fail=0
-for pid in "${pids[@]}"; do
-    if ! wait "$pid"; then
+left=${#pids[@]}
+while [[ $left -gt 0 ]]; do
+    if ! wait -n; then
         fail=1
+        rrm_cleanup_workers
+        rrm_reap_pids
+        break
     fi
+    left=$((left - 1))
 done
 trap - EXIT INT TERM
 for wlog in "${worker_logs[@]}"; do
