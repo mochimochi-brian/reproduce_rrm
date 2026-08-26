@@ -55,6 +55,37 @@ rrm_ts_slice() {
     fi
 }
 
+rrm_active_workers() {
+    local k="$1" nts="$2"
+    if [[ "$nts" -le 0 ]]; then
+        echo 0
+    elif [[ "$k" -gt "$nts" ]]; then
+        echo "$nts"
+    else
+        echo "$k"
+    fi
+}
+
+rrm_gap_string() {
+    local s="$1"
+    if [[ "$s" == *$'\n'* ]]; then
+        echo "path must not contain a newline" >&2
+        return 1
+    fi
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    printf '"%s"\n' "$s"
+}
+
+rrm_kill_pids() {
+    local pid
+    for pid in "$@"; do
+        if [[ -n "${pid:-}" ]] && kill -0 "$pid" 2>/dev/null; then
+            kill "$pid" 2>/dev/null || true
+        fi
+    done
+}
+
 if [[ "${1:-}" == --assert-nvert ]]; then
     shift
     if [[ $# -lt 2 ]]; then
@@ -63,6 +94,30 @@ if [[ "${1:-}" == --assert-nvert ]]; then
     fi
     rrm_assert_nverts "$@"
     exit $?
+fi
+
+if [[ "${1:-}" == --active-workers ]]; then
+    if [[ $# -ne 3 ]]; then
+        echo "Usage: $0 --active-workers K NTS" >&2
+        exit 1
+    fi
+    rrm_active_workers "$2" "$3"
+    exit 0
+fi
+
+if [[ "${1:-}" == --gap-string ]]; then
+    if [[ $# -ne 2 ]]; then
+        echo "Usage: $0 --gap-string PATH" >&2
+        exit 1
+    fi
+    rrm_gap_string "$2"
+    exit $?
+fi
+
+if [[ "${1:-}" == --kill-pids ]]; then
+    shift
+    rrm_kill_pids "$@"
+    exit 0
 fi
 
 if [[ $# -lt 3 ]]; then
@@ -88,11 +143,16 @@ if [[ ! -f "$GFILE" ]]; then
     exit 1
 fi
 
+gap_src="$(rrm_gap_string "$GAPSRC")"
+gap_g="$(rrm_gap_string "$GFILE")"
+gap_v="$(rrm_gap_string "$VFILE")"
+gap_e="$(rrm_gap_string "$EFILE")"
+
 if [[ "$GAP_WORKERS" -eq 1 ]]; then
     "$GAP" -b -q -r -m "$MEM" <<EOF
-Read("${GAPSRC}");
-Read("${GFILE}");
-generate_rrm("${VFILE}","${EFILE}",symc,ur,urt,ss,org_eq,org_ts,true,true);
+Read(${gap_src});
+Read(${gap_g});
+generate_rrm(${gap_v},${gap_e},symc,ur,urt,ss,org_eq,org_ts,true,true);
 QUIT;
 EOF
     exit 0
@@ -102,9 +162,9 @@ mkdir -p "$(dirname -- "$VFILE")" "$(dirname -- "$EFILE")"
 
 master_log="${VFILE}.master.log"
 "$GAP" -b -q -r -m "$MEM" <<EOF | tee "$master_log"
-Read("${GAPSRC}");
-Read("${GFILE}");
-generate_rrm_vertices("${VFILE}",symc,ur,urt,ss,org_eq,org_ts,true);
+Read(${gap_src});
+Read(${gap_g});
+generate_rrm_vertices(${gap_v},symc,ur,urt,ss,org_eq,org_ts,true);
 QUIT;
 EOF
 
@@ -115,19 +175,31 @@ if ! [[ "${nvert:-}" =~ ^[0-9]+$ && "${nts:-}" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
+active="$(rrm_active_workers "$GAP_WORKERS" "$nts")"
+if [[ "$active" -eq 0 ]]; then
+    : > "$EFILE"
+    exit 0
+fi
+
 pids=()
+rrm_cleanup_workers() {
+    rrm_kill_pids "${pids[@]:-}"
+}
+trap rrm_cleanup_workers EXIT INT TERM
+
 worker_logs=()
 w=0
-while [[ $w -lt $GAP_WORKERS ]]; do
-    read -r lo hi < <(rrm_ts_slice "$w" "$GAP_WORKERS" "$nts")
+while [[ $w -lt $active ]]; do
+    read -r lo hi < <(rrm_ts_slice "$w" "$active" "$nts")
     shard="${EFILE}.part.${w}"
     wlog="${EFILE}.part.${w}.log"
     worker_logs+=("$wlog")
+    gap_shard="$(rrm_gap_string "$shard")"
     echo "=== worker ${w} TS ${lo}..${hi} ==="
     "$GAP" -b -q -r -m "$MEM" <<EOF >"$wlog" 2>&1 &
-Read("${GAPSRC}");
-Read("${GFILE}");
-generate_rrm_edge_shard("${shard}",${lo},${hi},symc,ur,urt,ss,org_eq,org_ts,true);
+Read(${gap_src});
+Read(${gap_g});
+generate_rrm_edge_shard(${gap_shard},${lo},${hi},symc,ur,urt,ss,org_eq,org_ts,true);
 QUIT;
 EOF
     pids+=($!)
@@ -140,6 +212,7 @@ for pid in "${pids[@]}"; do
         fail=1
     fi
 done
+trap - EXIT INT TERM
 for wlog in "${worker_logs[@]}"; do
     cat "$wlog"
 done
@@ -152,7 +225,7 @@ rrm_assert_nverts "$nvert" "${worker_logs[@]}"
 
 : > "$EFILE"
 w=0
-while [[ $w -lt $GAP_WORKERS ]]; do
+while [[ $w -lt $active ]]; do
     part="${EFILE}.part.${w}"
     if [[ ! -f "$part" ]]; then
         echo "missing shard $part" >&2

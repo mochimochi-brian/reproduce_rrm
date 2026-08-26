@@ -18,6 +18,62 @@ if [[ ! -x "$DRIVER" ]]; then
     exit 1
 fi
 
+echo "== cap workers at TS count =="
+if [[ "$("$DRIVER" --active-workers 8 5)" != 5 ]]; then
+    echo "expected min(8,5)=5" >&2
+    exit 1
+fi
+if [[ "$("$DRIVER" --active-workers 3 10)" != 3 ]]; then
+    echo "expected min(3,10)=3" >&2
+    exit 1
+fi
+if [[ "$("$DRIVER" --active-workers 4 0)" != 0 ]]; then
+    echo "expected 0 workers when nts=0" >&2
+    exit 1
+fi
+echo "active-worker cap ok"
+
+echo "== GAP string escape =="
+if [[ "$("$DRIVER" --gap-string 'foo"bar')" != '"foo\"bar"' ]]; then
+    echo "expected quoted path with escaped double-quote" >&2
+    exit 1
+fi
+if [[ "$("$DRIVER" --gap-string 'a\b')" != '"a\\b"' ]]; then
+    echo "expected backslash escaped for GAP" >&2
+    exit 1
+fi
+set +e
+"$DRIVER" --gap-string $'a\nb' >"$OUT/gap_nl.out" 2>"$OUT/gap_nl.err"
+nl_rc=$?
+set -e
+if [[ "$nl_rc" -eq 0 ]]; then
+    echo "newline in path must be rejected" >&2
+    exit 1
+fi
+echo "GAP string escape ok"
+
+echo "== kill-pids terminates children =="
+sleep 60 &
+sleep_pid=$!
+"$DRIVER" --kill-pids "$sleep_pid"
+reaped=0
+i=0
+while [[ $i -lt 20 ]]; do
+    state=$(ps -o state= -p "$sleep_pid" 2>/dev/null || true)
+    if [[ -z "$state" || "$state" == *Z* ]]; then
+        reaped=1
+        break
+    fi
+    sleep 0.1
+    i=$((i + 1))
+done
+wait "$sleep_pid" 2>/dev/null || true
+if [[ "$reaped" -ne 1 ]]; then
+    echo "expected --kill-pids to stop pid $sleep_pid" >&2
+    exit 1
+fi
+echo "kill-pids ok"
+
 seq_v="$OUT/seq_v.dat"
 seq_e="$OUT/seq_e.dat"
 w1_v="$OUT/w1_v.dat"
