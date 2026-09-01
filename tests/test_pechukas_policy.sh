@@ -7,6 +7,8 @@ GAP="${GAP:-gap}"
 OUT="${OUT:-/tmp/rrm-pechukas-test}"
 MEM="${MEM:-12g}"
 GFILE="${ROOT}/data/AuCu4_AFIR.g"
+# Parent shells may export this (v11-compat runs). Default policy must be fail-closed.
+unset RRM_CONTINUE_ON_PECHUKAS
 
 cd "$ROOT"
 rm -rf "$OUT"
