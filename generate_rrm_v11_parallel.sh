@@ -94,6 +94,46 @@ rrm_keep_shards() {
     esac
 }
 
+rrm_rm_numeric_shards() {
+    # ${efile}.part.<digits> only. keep_n>0 leaves .part.0 .. .part.(keep_n-1).
+    local efile="$1"
+    local keep_n="${2:-0}"
+    local f n
+    for f in "$efile".part.[0-9]*; do
+        [[ -f "$f" ]] || continue
+        n="${f##*.part.}"
+        if [[ "$n" =~ ^[0-9]+$ ]]; then
+            if [[ "$keep_n" -le 0 || $((10#$n)) -ge "$keep_n" ]]; then
+                rm -f "$f"
+            fi
+        fi
+    done
+}
+
+rrm_kill_own_children() {
+    local child
+    # jobs -p is a builtin and sees the job before $! is assigned. Do not
+    # background anything here; that would clobber $! for the caller.
+    for child in $(jobs -p); do
+        rrm_kill_pids "$child"
+    done
+}
+
+rrm_after_bg() {
+    # Must stay foreground. A background command here would replace $!.
+    if [[ "${RRM_TEST_PID_REGISTER_DELAY:-0}" != 0 ]]; then
+        sleep "$RRM_TEST_PID_REGISTER_DELAY"
+    fi
+}
+
+rrm_publish_pair() {
+    trap '' INT TERM
+    mv "$concat_tmp" "$EFILE"
+    concat_tmp=""
+    mv "$v_stage" "$VFILE"
+    trap - EXIT INT TERM
+}
+
 if [[ "${1:-}" == --assert-nvert ]]; then
     shift
     if [[ $# -lt 2 ]]; then
@@ -128,6 +168,15 @@ if [[ "${1:-}" == --kill-pids ]]; then
     exit 0
 fi
 
+if [[ "${1:-}" == --rm-numeric-shards ]]; then
+    if [[ $# -lt 2 || $# -gt 3 ]]; then
+        echo "Usage: $0 --rm-numeric-shards EFILE [KEEP_N]" >&2
+        exit 1
+    fi
+    rrm_rm_numeric_shards "$2" "${3:-0}"
+    exit 0
+fi
+
 if [[ $# -lt 3 ]]; then
     echo "Usage: $0 VFILE EFILE GFILE" >&2
     exit 1
@@ -153,10 +202,10 @@ fi
 
 gap_src="$(rrm_gap_string "$GAPSRC")"
 gap_g="$(rrm_gap_string "$GFILE")"
-gap_v="$(rrm_gap_string "$VFILE")"
 gap_e="$(rrm_gap_string "$EFILE")"
 
 if [[ "$GAP_WORKERS" -eq 1 ]]; then
+    gap_v="$(rrm_gap_string "$VFILE")"
     "$GAP" -b -q -r -m "$MEM" <<EOF
 Read(${gap_src});
 Read(${gap_g});
@@ -178,22 +227,24 @@ fi
 
 mkdir -p "$(dirname -- "$VFILE")" "$(dirname -- "$EFILE")"
 
+v_stage="${VFILE}.staging"
+concat_tmp="${EFILE}.concat"
+gap_v="$(rrm_gap_string "$v_stage")"
+rm -f "$v_stage" "$concat_tmp"
+rrm_rm_numeric_shards "$EFILE" 0
+
 master_pid=""
 pids=()
-concat_tmp=""
 rrm_cleanup_workers() {
     rrm_kill_pids "${master_pid:-}" "${pids[@]:-}"
+    rrm_kill_own_children
     if [[ -n "${concat_tmp:-}" ]]; then
         rm -f "$concat_tmp"
     fi
+    rm -f "$v_stage"
 }
 rrm_reap_pids() {
-    local pid
-    for pid in "${master_pid:-}" "${pids[@]:-}"; do
-        if [[ -n "${pid:-}" ]]; then
-            wait "$pid" 2>/dev/null || true
-        fi
-    done
+    wait 2>/dev/null || true
 }
 rrm_on_cancel() {
     rrm_cleanup_workers
@@ -202,6 +253,7 @@ rrm_on_cancel() {
 }
 # Traps must cover the master GAP as well as workers. A pipeline `| tee`
 # would hide the GAP pid, so the master writes a log and we dump it after wait.
+# rrm_kill_own_children also reaps children not yet stored in master_pid/pids.
 trap rrm_cleanup_workers EXIT
 trap rrm_on_cancel INT TERM
 
@@ -212,6 +264,7 @@ Read(${gap_g});
 generate_rrm_vertices(${gap_v},symc,ur,urt,ss,org_eq,org_ts,true);
 QUIT;
 EOF
+rrm_after_bg
 master_pid=$!
 set +e
 wait "$master_pid"
@@ -235,8 +288,12 @@ fi
 
 active="$(rrm_active_workers "$GAP_WORKERS" "$nts")"
 if [[ "$active" -eq 0 ]]; then
-    trap - EXIT INT TERM
-    : > "$EFILE"
+    if [[ ! -f "$v_stage" ]]; then
+        echo "master did not write staged vertices" >&2
+        exit 1
+    fi
+    : > "$concat_tmp"
+    rrm_publish_pair
     exit 0
 fi
 
@@ -256,6 +313,7 @@ Read(${gap_g});
 generate_rrm_edge_shard(${gap_shard},${lo},${hi},symc,ur,urt,ss,org_eq,org_ts,true);
 QUIT;
 EOF
+    rrm_after_bg
     pids+=($!)
     w=$((w + 1))
     if [[ "${RRM_TEST_LAUNCH_DELAY:-0}" != 0 ]]; then
@@ -286,7 +344,6 @@ fi
 
 rrm_assert_nverts "$nvert" "${worker_logs[@]}"
 
-concat_tmp="${EFILE}.concat"
 : > "$concat_tmp"
 w=0
 while [[ $w -lt $active ]]; do
@@ -298,13 +355,13 @@ while [[ $w -lt $active ]]; do
     cat "$part" >> "$concat_tmp"
     w=$((w + 1))
 done
-mv "$concat_tmp" "$EFILE"
-concat_tmp=""
-if ! rrm_keep_shards; then
-    w=0
-    while [[ $w -lt $active ]]; do
-        rm -f "${EFILE}.part.${w}"
-        w=$((w + 1))
-    done
+if [[ ! -f "$v_stage" ]]; then
+    echo "master did not write staged vertices" >&2
+    exit 1
 fi
-trap - EXIT INT TERM
+rrm_publish_pair
+if rrm_keep_shards; then
+    rrm_rm_numeric_shards "$EFILE" "$active" || true
+else
+    rrm_rm_numeric_shards "$EFILE" 0 || true
+fi

@@ -74,12 +74,48 @@ if [[ "$reaped" -ne 1 ]]; then
 fi
 echo "kill-pids ok"
 
+echo "== rm-numeric-shards keeps only the current split =="
+rm_dir="$OUT/rm-shards"
+mkdir -p "$rm_dir"
+: >"$rm_dir/e.dat.part.0"
+: >"$rm_dir/e.dat.part.1"
+: >"$rm_dir/e.dat.part.2"
+: >"$rm_dir/e.dat.part.3"
+: >"$rm_dir/e.dat.part.08"
+: >"$rm_dir/e.dat.part.0.log"
+"$DRIVER" --rm-numeric-shards "$rm_dir/e.dat" 2
+if [[ ! -e "$rm_dir/e.dat.part.0" || ! -e "$rm_dir/e.dat.part.1" ]]; then
+    echo "keep_n=2 must leave part.0 and part.1" >&2
+    ls -l "$rm_dir" >&2
+    exit 1
+fi
+if [[ -e "$rm_dir/e.dat.part.2" || -e "$rm_dir/e.dat.part.3" || -e "$rm_dir/e.dat.part.08" ]]; then
+    echo "keep_n=2 must delete part.2, part.3, and padded part.08" >&2
+    ls -l "$rm_dir" >&2
+    exit 1
+fi
+if [[ ! -e "$rm_dir/e.dat.part.0.log" ]]; then
+    echo "numeric-shard cleanup must not delete worker logs" >&2
+    exit 1
+fi
+"$DRIVER" --rm-numeric-shards "$rm_dir/e.dat" 0
+if [[ -e "$rm_dir/e.dat.part.0" || -e "$rm_dir/e.dat.part.1" ]]; then
+    echo "keep_n=0 must delete all numeric shards" >&2
+    ls -l "$rm_dir" >&2
+    exit 1
+fi
+echo "rm-numeric-shards ok"
+
 fake_gap="$OUT/fake_gap.sh"
 cat >"$fake_gap" <<'FAKE'
 #!/bin/bash
 set -euo pipefail
 input=$(cat)
 if [[ "$input" == *generate_rrm_vertices* ]]; then
+    vfile=$(printf '%s\n' "$input" | sed -n 's/.*generate_rrm_vertices("\([^"]*\)".*/\1/p' | head -1)
+    if [[ -n "$vfile" ]]; then
+        printf 'NEW_VERTICES\n' >"$vfile"
+    fi
     echo "RRM_NVERT=1"
     echo "RRM_NTS=${FAKE_NTS:-8}"
     if [[ -n "${FAKE_MASTER_SLEEP:-}" ]]; then
@@ -216,8 +252,75 @@ if [[ "$starts" -ne 0 ]]; then
     cat "$mst_dir/out.log" >&2
     exit 1
 fi
+if [[ -e "$mst_dir/v.dat" ]]; then
+    echo "canceled master must not publish VFILE" >&2
+    ls -l "$mst_dir" >&2
+    exit 1
+fi
+if [[ -e "$mst_dir/v.dat.staging" ]]; then
+    echo "canceled master must remove staged vertices" >&2
+    ls -l "$mst_dir" >&2
+    exit 1
+fi
 echo "TERM during master ok (exit $mst_rc)"
 unset FAKE_MASTER_SLEEP FAKE_MASTER_PIDS FAKE_NTS
+
+echo "== TERM before master_pid is recorded must still kill GAP =="
+race_dir="$OUT/term-register"
+mkdir -p "$race_dir"
+export FAKE_STARTS="$race_dir/starts"
+export FAKE_PIDS="$race_dir/wpids"
+export FAKE_MASTER_PIDS="$race_dir/master.pid"
+export FAKE_MASTER_SLEEP=60
+export FAKE_NTS=8
+export RRM_TEST_PID_REGISTER_DELAY=2
+: >"$FAKE_STARTS"
+: >"$FAKE_PIDS"
+: >"$FAKE_MASTER_PIDS"
+unset RRM_TEST_LAUNCH_DELAY
+unset FAKE_FAIL_PART0
+set +e
+GAP="$fake_gap" MEM=1g GAP_WORKERS=2 \
+    "$DRIVER" "$race_dir/v.dat" "$race_dir/e.dat" "$dummy_g" \
+    >"$race_dir/out.log" 2>&1 &
+race_drv=$!
+i=0
+while [[ $i -lt 40 && ! -s "$FAKE_MASTER_PIDS" ]]; do
+    sleep 0.1
+    i=$((i + 1))
+done
+if [[ ! -s "$FAKE_MASTER_PIDS" ]]; then
+    echo "master fake GAP did not start for pid-register race" >&2
+    cat "$race_dir/out.log" >&2
+    kill -TERM "$race_drv" 2>/dev/null || true
+    wait "$race_drv" 2>/dev/null || true
+    exit 1
+fi
+kill -TERM "$race_drv" 2>/dev/null || true
+wait "$race_drv" 2>/dev/null
+race_rc=$?
+set -e
+if [[ "$race_rc" -eq 0 ]]; then
+    echo "expected nonzero exit after TERM during pid registration" >&2
+    cat "$race_dir/out.log" >&2
+    exit 1
+fi
+race_alive=0
+while read -r rpid; do
+    state=$(ps -o state= -p "$rpid" 2>/dev/null || true)
+    if [[ -n "$state" && "$state" != *Z* ]]; then
+        race_alive=1
+        kill "$rpid" 2>/dev/null || true
+        wait "$rpid" 2>/dev/null || true
+    fi
+done <"$FAKE_MASTER_PIDS"
+if [[ "$race_alive" -ne 0 ]]; then
+    echo "unregistered master GAP still running after TERM" >&2
+    cat "$race_dir/out.log" >&2
+    exit 1
+fi
+echo "TERM during pid registration ok (exit $race_rc)"
+unset FAKE_MASTER_SLEEP FAKE_MASTER_PIDS FAKE_NTS RRM_TEST_PID_REGISTER_DELAY
 
 echo "== one worker failure must cancel siblings =="
 fail_dir="$OUT/failfast"
@@ -306,6 +409,134 @@ fi
 cat "$keep_dir/e.dat.part.0" "$keep_dir/e.dat.part.1" >"$keep_dir/cat.dat"
 cmp -s "$keep_dir/cat.dat" "$keep_dir/e.dat"
 echo "fake keep-shards ok"
+
+echo "== fake GAP: stale higher shards from a prior k are removed =="
+stale_dir="$OUT/shards-stale"
+mkdir -p "$stale_dir"
+export FAKE_STARTS="$stale_dir/starts"
+: >"$FAKE_STARTS"
+printf 'stale2\n' >"$stale_dir/e.dat.part.2"
+printf 'stale3\n' >"$stale_dir/e.dat.part.3"
+: >"$stale_dir/e.dat.part.2.log"
+RRM_KEEP_SHARDS=1 GAP="$fake_gap" MEM=1g GAP_WORKERS=2 \
+    "$DRIVER" "$stale_dir/v.dat" "$stale_dir/e.dat" "$dummy_g" \
+    >"$stale_dir/out.log" 2>&1
+if [[ ! -s "$stale_dir/e.dat.part.0" || ! -s "$stale_dir/e.dat.part.1" ]]; then
+    echo "current shards must remain when RRM_KEEP_SHARDS=1" >&2
+    cat "$stale_dir/out.log" >&2
+    ls -l "$stale_dir" >&2
+    exit 1
+fi
+if [[ -e "$stale_dir/e.dat.part.2" || -e "$stale_dir/e.dat.part.3" ]]; then
+    echo "stale shards from a larger prior run must be deleted" >&2
+    ls -l "$stale_dir" >&2
+    exit 1
+fi
+if [[ ! -e "$stale_dir/e.dat.part.2.log" ]]; then
+    echo "stale-shard cleanup must not delete worker logs" >&2
+    exit 1
+fi
+echo "stale higher shards removed ok"
+
+echo "== fake GAP: worker failure must not replace existing VFILE/EFILE =="
+stage_dir="$OUT/stage-fail"
+mkdir -p "$stage_dir"
+export FAKE_STARTS="$stage_dir/starts"
+export FAKE_FAIL_PART0=1
+: >"$FAKE_STARTS"
+printf 'OLD_VERTICES\n' >"$stage_dir/v.dat"
+printf 'OLD_EDGES\n' >"$stage_dir/e.dat"
+set +e
+GAP="$fake_gap" MEM=1g GAP_WORKERS=2 \
+    "$DRIVER" "$stage_dir/v.dat" "$stage_dir/e.dat" "$dummy_g" \
+    >"$stage_dir/out.log" 2>&1
+stage_rc=$?
+set -e
+if [[ "$stage_rc" -eq 0 ]]; then
+    echo "expected nonzero when a shard worker fails" >&2
+    cat "$stage_dir/out.log" >&2
+    exit 1
+fi
+if [[ "$(cat "$stage_dir/v.dat")" != "OLD_VERTICES" ]]; then
+    echo "failed run must leave the previous VFILE in place" >&2
+    cat "$stage_dir/v.dat" >&2
+    cat "$stage_dir/out.log" >&2
+    exit 1
+fi
+if [[ "$(cat "$stage_dir/e.dat")" != "OLD_EDGES" ]]; then
+    echo "failed run must leave the previous EFILE in place" >&2
+    cat "$stage_dir/e.dat" >&2
+    exit 1
+fi
+if [[ -e "$stage_dir/v.dat.staging" ]]; then
+    echo "failed run must not leave staged vertices" >&2
+    ls -l "$stage_dir" >&2
+    exit 1
+fi
+echo "failed run keeps prior VFILE/EFILE ok"
+unset FAKE_FAIL_PART0
+
+echo "== fake GAP: success publishes staged vertices =="
+pub_dir="$OUT/stage-ok"
+mkdir -p "$pub_dir"
+export FAKE_STARTS="$pub_dir/starts"
+: >"$FAKE_STARTS"
+printf 'OLD_VERTICES\n' >"$pub_dir/v.dat"
+GAP="$fake_gap" MEM=1g GAP_WORKERS=2 \
+    "$DRIVER" "$pub_dir/v.dat" "$pub_dir/e.dat" "$dummy_g" \
+    >"$pub_dir/out.log" 2>&1
+if [[ "$(cat "$pub_dir/v.dat")" != "NEW_VERTICES" ]]; then
+    echo "successful run must publish staged vertices to VFILE" >&2
+    cat "$pub_dir/v.dat" >&2
+    cat "$pub_dir/out.log" >&2
+    exit 1
+fi
+if [[ -e "$pub_dir/v.dat.staging" ]]; then
+    echo "successful run must not leave the staging file" >&2
+    ls -l "$pub_dir" >&2
+    exit 1
+fi
+echo "success publishes staged vertices ok"
+
+echo "== fake GAP: nts=0 publishes empty edges with new vertices =="
+z_dir="$OUT/nts0"
+mkdir -p "$z_dir"
+export FAKE_STARTS="$z_dir/starts"
+export FAKE_NTS=0
+: >"$FAKE_STARTS"
+printf 'OLD_VERTICES\n' >"$z_dir/v.dat"
+printf 'OLD_EDGES\n' >"$z_dir/e.dat"
+GAP="$fake_gap" MEM=1g GAP_WORKERS=2 \
+    "$DRIVER" "$z_dir/v.dat" "$z_dir/e.dat" "$dummy_g" \
+    >"$z_dir/out.log" 2>&1
+if [[ "$(cat "$z_dir/v.dat")" != "NEW_VERTICES" ]]; then
+    echo "nts=0 must publish staged vertices" >&2
+    cat "$z_dir/v.dat" >&2
+    cat "$z_dir/out.log" >&2
+    exit 1
+fi
+if [[ -s "$z_dir/e.dat" ]]; then
+    echo "nts=0 must publish an empty edge file" >&2
+    cat "$z_dir/e.dat" >&2
+    exit 1
+fi
+if [[ ! -e "$z_dir/e.dat" ]]; then
+    echo "nts=0 must create EFILE" >&2
+    ls -l "$z_dir" >&2
+    exit 1
+fi
+if [[ -e "$z_dir/v.dat.staging" ]]; then
+    echo "nts=0 must not leave staging" >&2
+    ls -l "$z_dir" >&2
+    exit 1
+fi
+if grep -q started "$FAKE_STARTS"; then
+    echo "nts=0 must not start edge workers" >&2
+    cat "$z_dir/out.log" >&2
+    exit 1
+fi
+echo "nts=0 publish ok"
+export FAKE_NTS=2
 
 echo "== fake GAP: concat failure must keep earlier shards =="
 miss_dir="$OUT/shards-missing"
@@ -468,8 +699,8 @@ if grep -q UNREACHABLE "$pech_dir/out.log"; then
     cat "$pech_dir/out.log" >&2
     exit 1
 fi
-if [[ -e "$pech_dir/e.dat" ]]; then
-    echo "edge file must not be written after a Pechukas abort" >&2
+if [[ -e "$pech_dir/e.dat" || -e "$pech_dir/v.dat" || -e "$pech_dir/v.dat.staging" ]]; then
+    echo "vertex/edge files must not be published after a Pechukas abort" >&2
     ls -l "$pech_dir" >&2
     exit 1
 fi
