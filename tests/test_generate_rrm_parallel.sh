@@ -82,6 +82,10 @@ input=$(cat)
 if [[ "$input" == *generate_rrm_vertices* ]]; then
     echo "RRM_NVERT=1"
     echo "RRM_NTS=${FAKE_NTS:-8}"
+    if [[ -n "${FAKE_MASTER_SLEEP:-}" ]]; then
+        echo $$ >>"${FAKE_MASTER_PIDS:?}"
+        exec sleep "$FAKE_MASTER_SLEEP"
+    fi
     exit 0
 fi
 if [[ "$input" == *generate_rrm_edge_shard* ]]; then
@@ -138,6 +142,69 @@ if [[ -s "$FAKE_PIDS" ]]; then
     done <"$FAKE_PIDS"
 fi
 echo "TERM stops launch ok (starts=$starts exit $term_rc)"
+
+echo "== TERM during master must kill the master GAP =="
+mst_dir="$OUT/term-master"
+mkdir -p "$mst_dir"
+export FAKE_STARTS="$mst_dir/starts"
+export FAKE_PIDS="$mst_dir/wpids"
+export FAKE_MASTER_PIDS="$mst_dir/master.pid"
+export FAKE_MASTER_SLEEP=60
+export FAKE_NTS=8
+: >"$FAKE_STARTS"
+: >"$FAKE_PIDS"
+: >"$FAKE_MASTER_PIDS"
+unset RRM_TEST_LAUNCH_DELAY
+unset FAKE_FAIL_PART0
+set +e
+GAP="$fake_gap" MEM=1g GAP_WORKERS=2 \
+    "$DRIVER" "$mst_dir/v.dat" "$mst_dir/e.dat" "$dummy_g" \
+    >"$mst_dir/out.log" 2>&1 &
+mst_drv=$!
+i=0
+while [[ $i -lt 30 && ! -s "$FAKE_MASTER_PIDS" ]]; do
+    sleep 0.1
+    i=$((i + 1))
+done
+if [[ ! -s "$FAKE_MASTER_PIDS" ]]; then
+    echo "master fake GAP did not start" >&2
+    cat "$mst_dir/out.log" >&2
+    kill -TERM "$mst_drv" 2>/dev/null || true
+    wait "$mst_drv" 2>/dev/null || true
+    exit 1
+fi
+sleep 0.2
+kill -TERM "$mst_drv" 2>/dev/null || true
+wait "$mst_drv" 2>/dev/null
+mst_rc=$?
+set -e
+if [[ "$mst_rc" -eq 0 ]]; then
+    echo "expected nonzero exit after TERM during master" >&2
+    cat "$mst_dir/out.log" >&2
+    exit 1
+fi
+mst_alive=0
+while read -r mpid; do
+    state=$(ps -o state= -p "$mpid" 2>/dev/null || true)
+    if [[ -n "$state" && "$state" != *Z* ]]; then
+        mst_alive=1
+        kill "$mpid" 2>/dev/null || true
+        wait "$mpid" 2>/dev/null || true
+    fi
+done <"$FAKE_MASTER_PIDS"
+if [[ "$mst_alive" -ne 0 ]]; then
+    echo "master GAP still running after TERM on the driver" >&2
+    cat "$mst_dir/out.log" >&2
+    exit 1
+fi
+starts=$(grep -c started "$FAKE_STARTS" || true)
+if [[ "$starts" -ne 0 ]]; then
+    echo "workers started after TERM during master (starts=$starts)" >&2
+    cat "$mst_dir/out.log" >&2
+    exit 1
+fi
+echo "TERM during master ok (exit $mst_rc)"
+unset FAKE_MASTER_SLEEP FAKE_MASTER_PIDS FAKE_NTS
 
 echo "== one worker failure must cancel siblings =="
 fail_dir="$OUT/failfast"
@@ -209,8 +276,8 @@ echo "GAP_WORKERS=1 vertices/edges byte-identical to sequential generate_rrm"
 w2_v="$OUT/w2_v.dat"
 w2_e="$OUT/w2_e.dat"
 w2_log="$OUT/w2.log"
-echo "== GAP_WORKERS=2 via driver =="
-GAP="$GAP" MEM="$MEM" GAP_WORKERS=2 \
+echo "== GAP_WORKERS=2 via driver (RRM_KEEP_SHARDS=1) =="
+RRM_KEEP_SHARDS=1 GAP="$GAP" MEM="$MEM" GAP_WORKERS=2 \
     "$DRIVER" "$w2_v" "$w2_e" "$GFILE" >"$w2_log" 2>&1
 
 cmp -s "$w1_v" "$w2_v"
@@ -229,6 +296,20 @@ fi
 cat "${w2_e}.part.0" "${w2_e}.part.1" >"$OUT/w2_cat.dat"
 cmp -s "$OUT/w2_cat.dat" "$w2_e"
 echo "shards concatenate in TS-index order"
+
+echo "== GAP_WORKERS=2 default deletes shards =="
+w2d_v="$OUT/w2d_v.dat"
+w2d_e="$OUT/w2d_e.dat"
+unset RRM_KEEP_SHARDS
+GAP="$GAP" MEM="$MEM" GAP_WORKERS=2 \
+    "$DRIVER" "$w2d_v" "$w2d_e" "$GFILE" >"$OUT/w2d.log" 2>&1
+cmp -s "$w1_e" "$w2d_e"
+if [[ -e "${w2d_e}.part.0" || -e "${w2d_e}.part.1" ]]; then
+    echo "default run must delete edge shards after concat" >&2
+    ls -l "$OUT"/w2d_e.dat.part.* 2>/dev/null >&2 || true
+    exit 1
+fi
+echo "default shard cleanup ok"
 
 nvert_lines=$(grep -c '^RRM_NVERT=' "$w2_log" || true)
 if [[ "$nvert_lines" -lt 3 ]]; then
