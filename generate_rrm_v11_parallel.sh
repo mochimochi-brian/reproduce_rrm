@@ -3,6 +3,7 @@
 # Not a new Teramoto version of generate_rrm_v11.g.
 # Default GAP_WORKERS=1 is the sequential generate_rrm path.
 # GAP_WORKERS=k>1: master writes vertices (and Pechukas); workers write TS shards.
+# Edge shards are deleted after concat unless RRM_KEEP_SHARDS=1.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -86,6 +87,13 @@ rrm_kill_pids() {
     done
 }
 
+rrm_keep_shards() {
+    case "${RRM_KEEP_SHARDS:-}" in
+        1|true|TRUE) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 if [[ "${1:-}" == --assert-nvert ]]; then
     shift
     if [[ $# -lt 2 ]]; then
@@ -158,15 +166,65 @@ EOF
     exit 0
 fi
 
+if [[ -n "${RRM_KEEP_SHARDS:-}" ]]; then
+    case "${RRM_KEEP_SHARDS}" in
+        1|true|TRUE) ;;
+        *)
+            echo "RRM_KEEP_SHARDS must be 1 or true (got '${RRM_KEEP_SHARDS}')" >&2
+            exit 1
+            ;;
+    esac
+fi
+
 mkdir -p "$(dirname -- "$VFILE")" "$(dirname -- "$EFILE")"
 
+master_pid=""
+pids=()
+concat_tmp=""
+rrm_cleanup_workers() {
+    rrm_kill_pids "${master_pid:-}" "${pids[@]:-}"
+    if [[ -n "${concat_tmp:-}" ]]; then
+        rm -f "$concat_tmp"
+    fi
+}
+rrm_reap_pids() {
+    local pid
+    for pid in "${master_pid:-}" "${pids[@]:-}"; do
+        if [[ -n "${pid:-}" ]]; then
+            wait "$pid" 2>/dev/null || true
+        fi
+    done
+}
+rrm_on_cancel() {
+    rrm_cleanup_workers
+    rrm_reap_pids
+    exit 143
+}
+# Traps must cover the master GAP as well as workers. A pipeline `| tee`
+# would hide the GAP pid, so the master writes a log and we dump it after wait.
+trap rrm_cleanup_workers EXIT
+trap rrm_on_cancel INT TERM
+
 master_log="${VFILE}.master.log"
-"$GAP" -b -q -r -m "$MEM" <<EOF | tee "$master_log"
+"$GAP" -b -q -r -m "$MEM" <<EOF >"$master_log" 2>&1 &
 Read(${gap_src});
 Read(${gap_g});
 generate_rrm_vertices(${gap_v},symc,ur,urt,ss,org_eq,org_ts,true);
 QUIT;
 EOF
+master_pid=$!
+set +e
+wait "$master_pid"
+master_rc=$?
+set -e
+master_pid=""
+if [[ -f "$master_log" ]]; then
+    cat "$master_log" || true
+fi
+if [[ "$master_rc" -ne 0 ]]; then
+    echo "master GAP failed" >&2
+    exit 1
+fi
 
 nvert="$(rrm_nvert_from_log "$master_log" || true)"
 nts="$(grep '^RRM_NTS=' "$master_log" | tail -1 | cut -d= -f2 || true)"
@@ -177,27 +235,10 @@ fi
 
 active="$(rrm_active_workers "$GAP_WORKERS" "$nts")"
 if [[ "$active" -eq 0 ]]; then
+    trap - EXIT INT TERM
     : > "$EFILE"
     exit 0
 fi
-
-pids=()
-rrm_cleanup_workers() {
-    rrm_kill_pids "${pids[@]:-}"
-}
-rrm_reap_pids() {
-    local pid
-    for pid in "${pids[@]:-}"; do
-        wait "$pid" 2>/dev/null || true
-    done
-}
-rrm_on_cancel() {
-    rrm_cleanup_workers
-    rrm_reap_pids
-    exit 143
-}
-trap rrm_cleanup_workers EXIT
-trap rrm_on_cancel INT TERM
 
 worker_logs=()
 w=0
@@ -208,6 +249,7 @@ while [[ $w -lt $active ]]; do
     worker_logs+=("$wlog")
     gap_shard="$(rrm_gap_string "$shard")"
     echo "=== worker ${w} TS ${lo}..${hi} ==="
+    rm -f "$shard"
     "$GAP" -b -q -r -m "$MEM" <<EOF >"$wlog" 2>&1 &
 Read(${gap_src});
 Read(${gap_g});
@@ -232,7 +274,8 @@ while [[ $left -gt 0 ]]; do
     fi
     left=$((left - 1))
 done
-trap - EXIT INT TERM
+pids=()
+master_pid=""
 for wlog in "${worker_logs[@]}"; do
     cat "$wlog"
 done
@@ -243,7 +286,8 @@ fi
 
 rrm_assert_nverts "$nvert" "${worker_logs[@]}"
 
-: > "$EFILE"
+concat_tmp="${EFILE}.concat"
+: > "$concat_tmp"
 w=0
 while [[ $w -lt $active ]]; do
     part="${EFILE}.part.${w}"
@@ -251,6 +295,16 @@ while [[ $w -lt $active ]]; do
         echo "missing shard $part" >&2
         exit 1
     fi
-    cat "$part" >> "$EFILE"
+    cat "$part" >> "$concat_tmp"
     w=$((w + 1))
 done
+mv "$concat_tmp" "$EFILE"
+concat_tmp=""
+if ! rrm_keep_shards; then
+    w=0
+    while [[ $w -lt $active ]]; do
+        rm -f "${EFILE}.part.${w}"
+        w=$((w + 1))
+    done
+fi
+trap - EXIT INT TERM

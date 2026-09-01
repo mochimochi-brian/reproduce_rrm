@@ -93,6 +93,19 @@ if [[ "$input" == *generate_rrm_edge_shard* ]]; then
     if [[ -n "${FAKE_FAIL_PART0:-}" && "$input" == *'.part.0'* ]]; then
         exit 1
     fi
+    if [[ -n "${FAKE_WRITE_SHARDS:-}" ]]; then
+        shard=$(printf '%s\n' "$input" | sed -n 's/.*generate_rrm_edge_shard("\([^"]*\)".*/\1/p' | head -1)
+        if [[ -z "$shard" ]]; then
+            echo "fake_gap: no shard path" >&2
+            exit 1
+        fi
+        echo "RRM_NVERT=1"
+        if [[ -n "${FAKE_SKIP_PART1:-}" && "$input" == *'.part.1'* ]]; then
+            exit 0
+        fi
+        printf 'edges from %s\n' "$shard" >"$shard"
+        exit 0
+    fi
     echo $$ >>"${FAKE_PIDS:?}"
     exec sleep 61
 fi
@@ -251,6 +264,101 @@ if [[ "$alive" -ne 0 ]]; then
 fi
 echo "sibling cancel ok (${elapsed}s exit $fail_rc)"
 unset FAKE_STARTS FAKE_PIDS FAKE_NTS FAKE_FAIL_PART0
+
+echo "== fake GAP: default deletes shards after concat =="
+sh_dir="$OUT/shards-default"
+mkdir -p "$sh_dir"
+export FAKE_STARTS="$sh_dir/starts"
+export FAKE_WRITE_SHARDS=1
+export FAKE_NTS=2
+: >"$FAKE_STARTS"
+unset RRM_KEEP_SHARDS
+unset FAKE_SKIP_PART1
+GAP="$fake_gap" MEM=1g GAP_WORKERS=2 \
+    "$DRIVER" "$sh_dir/v.dat" "$sh_dir/e.dat" "$dummy_g" \
+    >"$sh_dir/out.log" 2>&1
+if [[ ! -s "$sh_dir/e.dat" ]]; then
+    echo "expected concatenated edges" >&2
+    cat "$sh_dir/out.log" >&2
+    exit 1
+fi
+if [[ -e "$sh_dir/e.dat.part.0" || -e "$sh_dir/e.dat.part.1" ]]; then
+    echo "default fake run must delete shards after concat" >&2
+    ls -l "$sh_dir" >&2
+    exit 1
+fi
+echo "fake default shard cleanup ok"
+
+echo "== fake GAP: RRM_KEEP_SHARDS=1 keeps shards =="
+keep_dir="$OUT/shards-keep"
+mkdir -p "$keep_dir"
+export FAKE_STARTS="$keep_dir/starts"
+: >"$FAKE_STARTS"
+RRM_KEEP_SHARDS=1 GAP="$fake_gap" MEM=1g GAP_WORKERS=2 \
+    "$DRIVER" "$keep_dir/v.dat" "$keep_dir/e.dat" "$dummy_g" \
+    >"$keep_dir/out.log" 2>&1
+if [[ ! -s "$keep_dir/e.dat.part.0" || ! -s "$keep_dir/e.dat.part.1" ]]; then
+    echo "RRM_KEEP_SHARDS=1 must leave shards" >&2
+    cat "$keep_dir/out.log" >&2
+    ls -l "$keep_dir" >&2
+    exit 1
+fi
+cat "$keep_dir/e.dat.part.0" "$keep_dir/e.dat.part.1" >"$keep_dir/cat.dat"
+cmp -s "$keep_dir/cat.dat" "$keep_dir/e.dat"
+echo "fake keep-shards ok"
+
+echo "== fake GAP: concat failure must keep earlier shards =="
+miss_dir="$OUT/shards-missing"
+mkdir -p "$miss_dir"
+export FAKE_STARTS="$miss_dir/starts"
+export FAKE_SKIP_PART1=1
+: >"$FAKE_STARTS"
+unset RRM_KEEP_SHARDS
+set +e
+GAP="$fake_gap" MEM=1g GAP_WORKERS=2 \
+    "$DRIVER" "$miss_dir/v.dat" "$miss_dir/e.dat" "$dummy_g" \
+    >"$miss_dir/out.log" 2>&1
+miss_rc=$?
+set -e
+if [[ "$miss_rc" -eq 0 ]]; then
+    echo "expected nonzero when a shard is missing" >&2
+    cat "$miss_dir/out.log" >&2
+    exit 1
+fi
+if [[ ! -s "$miss_dir/e.dat.part.0" ]]; then
+    echo "failed concat must not delete shards that were already written" >&2
+    cat "$miss_dir/out.log" >&2
+    ls -l "$miss_dir" >&2
+    exit 1
+fi
+if [[ -e "$miss_dir/e.dat" ]]; then
+    echo "failed concat must not publish a partial edge file" >&2
+    cat "$miss_dir/out.log" >&2
+    ls -l "$miss_dir" >&2
+    exit 1
+fi
+echo "failed concat keeps shards ok (exit $miss_rc)"
+
+echo "== unknown RRM_KEEP_SHARDS must abort =="
+bad_dir="$OUT/shards-badflag"
+mkdir -p "$bad_dir"
+export FAKE_STARTS="$bad_dir/starts"
+: >"$FAKE_STARTS"
+unset FAKE_SKIP_PART1
+set +e
+RRM_KEEP_SHARDS=yes GAP="$fake_gap" MEM=1g GAP_WORKERS=2 \
+    "$DRIVER" "$bad_dir/v.dat" "$bad_dir/e.dat" "$dummy_g" \
+    >"$bad_dir/out.log" 2>&1
+bad_rc=$?
+set -e
+if [[ "$bad_rc" -eq 0 ]]; then
+    echo "expected nonzero for unrecognized RRM_KEEP_SHARDS" >&2
+    cat "$bad_dir/out.log" >&2
+    exit 1
+fi
+echo "unknown RRM_KEEP_SHARDS rejected (exit $bad_rc)"
+unset FAKE_STARTS FAKE_WRITE_SHARDS FAKE_NTS FAKE_SKIP_PART1
+unset RRM_KEEP_SHARDS
 
 seq_v="$OUT/seq_v.dat"
 seq_e="$OUT/seq_e.dat"
