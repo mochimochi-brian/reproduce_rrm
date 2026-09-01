@@ -56,7 +56,10 @@ set +e
 fail_out="$OUT/fail_closed.log"
 "$GAP" -T -b -q -r >"$fail_out" 2>&1 <<EOF
 Read("${ROOT}/${FAST}");
-RrmVertexIndex([0], [[1,2,3]], 1, 99);
+G:=SymmetricGroup(4);;
+U:=TrivialSubgroup(G);;
+built:=RrmBuildTransversals(G,[U]);;
+RrmVertexIndex(built.offset, built.idx, [U], 1, (1,2,3,4,5));
 Print("UNREACHABLE\n");
 QUIT;
 EOF
