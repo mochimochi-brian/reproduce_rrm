@@ -1,8 +1,9 @@
 # Faster generate_rrm for generate_rrm_v11.g (same API; Au5Ag dat bytes match).
 # Not a new Teramoto version: v11 stays the original script.
-# Sequential: vertex id is offset[eq] + PositionCanonical(rt[eq], g), matching
-# v11's Position(vertices, [eq, CanonicalRightCosetElement(...)]) because
-# vertices are appended in RightTransversal order. Edges are written with
+# Sequential: vertex id is offset[eq] + hash lookup of
+# CanonicalRightCosetElement(ur[eq], g) (SparseHashTable + SparseIntKey),
+# matching v11's Position(vertices, [eq, CanonicalRightCosetElement(...)])
+# because vertices are appended in RightTransversal order. Edges are written with
 # OutputTextFile inside the TS loop; the full edge list is not kept. Same-EQ
 # Pechukas uses a cached RightTransversal. A failed coset lookup prints an
 # error and FORCE_QUIT_GAP(1) (v11 would Print the string fail into the dat
@@ -18,9 +19,19 @@
 # ss : list of [[i,s1],[j,s2]] (i, j: indices of equilibrium structures, s1 and s2 are permutation from the equilibrium structures)
 # labels : vertex (edge) label is attached if true and is not otherwise
 
-RrmVertexIndex:=function(offset, rt, eq, g)
+RrmNewCosetIndex:=function(sym)
+	local h;
+	h:=SparseIntKey(sym, One(sym));
+	if h=fail then
+		Print("Error, no permutation hash key for vertex index\n");
+		FORCE_QUIT_GAP(1);
+	fi;
+	return SparseHashTable(h);
+end;;
+
+RrmVertexIndex:=function(offset, idx, ur, eq, g)
 	local pos;
-	pos:=PositionCanonical(rt[eq], g);
+	pos:=LookupDictionary(idx[eq], CanonicalRightCosetElement(ur[eq], g));
 	if pos=fail then
 		# Error() returns under gap -T; FORCE_QUIT_GAP is the batch stop.
 		Print("Error, vertex lookup failed for EQ",eq-1,"\n");
@@ -55,16 +66,22 @@ RrmOnPechukasViolation:=function()
 end;;
 
 RrmBuildTransversals:=function(sym, ur)
-	local rt, offset, nvert, i;
+	local rt, offset, nvert, idx, i, j, ht;
 	rt:=[];
 	offset:=[];
+	idx:=[];
 	nvert:=0;
 	for i in [1..Length(ur)] do
 		rt[i]:=RightTransversal(sym,ur[i]);
+		ht:=RrmNewCosetIndex(sym);
+		for j in [1..Length(rt[i])] do
+			AddDictionary(ht, CanonicalRightCosetElement(ur[i], rt[i][j]), j);
+		od;
+		idx[i]:=ht;
 		offset[i]:=nvert;
 		nvert:=nvert+Length(rt[i]);
 	od;
-	return rec(rt:=rt, offset:=offset, nvert:=nvert);
+	return rec(rt:=rt, offset:=offset, nvert:=nvert, idx:=idx);
 end;;
 
 RrmCheckPechukas:=function(sym, ur, urt, ss, org_eq, org_ts, rt)
@@ -197,7 +214,7 @@ RrmWriteVertices:=function(vfile, ur, org_eq, rt, vlabel)
 	CloseStream(vstream);
 end;;
 
-RrmWriteEdges:=function(efile, sym, urt, ss, org_ts, rt, offset, elabel, lo, hi)
+RrmWriteEdges:=function(efile, sym, urt, ss, org_ts, offset, idx, ur, elabel, lo, hi)
 	local estream, i, rturti, id1, id2, canon;
 	estream:=OutputTextFile(efile,false);
 	if estream=fail then
@@ -212,8 +229,8 @@ RrmWriteEdges:=function(efile, sym, urt, ss, org_ts, rt, offset, elabel, lo, hi)
 		fi;
 		for i in [lo..hi] do
 			for rturti in RightTransversal(sym,urt[i]) do
-				id1:=RrmVertexIndex(offset,rt,ss[i][1][1],ss[i][1][2]^-1*rturti);
-				id2:=RrmVertexIndex(offset,rt,ss[i][2][1],ss[i][2][2]^-1*rturti);
+				id1:=RrmVertexIndex(offset,idx,ur,ss[i][1][1],ss[i][1][2]^-1*rturti);
+				id2:=RrmVertexIndex(offset,idx,ur,ss[i][2][1],ss[i][2][2]^-1*rturti);
 				canon:=CanonicalRightCosetElement(urt[i],rturti);
 				if elabel then
 					if org_ts[i]=i then
@@ -247,6 +264,7 @@ generate_rrm:=function(vfile, efile, sym, ur, urt, ss, org_eq, org_ts, labels...
 	built:=RrmBuildTransversals(sym, ur);
 	RrmCheckPechukas(sym, ur, urt, ss, org_eq, org_ts, built.rt);
 	RrmWriteVertices(vfile, ur, org_eq, built.rt, vlabel);
-	RrmWriteEdges(efile, sym, urt, ss, org_ts, built.rt, built.offset, elabel, 1, Length(ss));
+	RrmWriteEdges(efile, sym, urt, ss, org_ts, built.offset, built.idx, ur, elabel, 1, Length(ss));
 	return;
 end;;
+
