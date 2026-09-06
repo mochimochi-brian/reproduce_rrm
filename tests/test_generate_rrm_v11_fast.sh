@@ -43,13 +43,7 @@ cmp -s "${OUT}/v11_v.dat" "${OUT}/fast_v.dat"
 cmp -s "${OUT}/v11_e.dat" "${OUT}/fast_e.dat"
 echo "Au5Ag vertices/edges byte-identical to v11"
 
-{
-    echo "graph G {"
-    cat "${OUT}/fast_v.dat"
-    cat "${OUT}/fast_e.dat"
-    echo "}"
-} > "${OUT}/Au5Ag_fast.dot"
-python3 "${ROOT}/check_number_of_edges_v3.py" "${OUT}/Au5Ag_fast.dot"
+python3 "${ROOT}/check_number_of_edges_dat.py" "${OUT}/fast_v.dat" "${OUT}/fast_e.dat"
 
 echo "== fail-closed: missing vertex must Error (gap -T, non-zero) =="
 set +e
