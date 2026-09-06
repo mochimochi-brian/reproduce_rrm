@@ -10,17 +10,18 @@ CLUSTER = re.compile(r'subgraph\s+cluster_\S+\s*\{\s*label="([^"]+)"')
 EDGE = re.compile(r'^(\d+)--(\d+)(?:\[label="[^"]*"\])?$')
 
 
-def _grow(eq_of, deg, vid, eq):
-    if vid <= 0:
-        print("Error: vertex id must be positive: {}".format(vid), file=sys.stderr)
+def _append(eq_of, deg, vid, eq):
+    expected = len(deg)
+    if vid != expected:
+        print(
+            "Error: vertex ids must be contiguous starting at 1, got {} (expected {})".format(
+                vid, expected
+            ),
+            file=sys.stderr,
+        )
         sys.exit(1)
-    while len(deg) <= vid:
-        eq_of.append(None)
-        deg.append(0)
-    if eq_of[vid] is not None:
-        print("Error: duplicate vertex {}".format(vid), file=sys.stderr)
-        sys.exit(1)
-    eq_of[vid] = eq
+    eq_of.append(eq)
+    deg.append(0)
 
 
 def parse_vertices(filename):
@@ -51,7 +52,7 @@ def parse_vertices(filename):
                         file=sys.stderr,
                     )
                     sys.exit(1)
-                _grow(eq_of, deg, vid, number)
+                _append(eq_of, deg, vid, number)
                 continue
             m = VERTEX_BARE.match(line)
             if m:
@@ -62,7 +63,7 @@ def parse_vertices(filename):
                         file=sys.stderr,
                     )
                     sys.exit(1)
-                _grow(eq_of, deg, vid, current_eq)
+                _append(eq_of, deg, vid, current_eq)
                 continue
             print("Error: cannot parse vertex line: {}".format(line), file=sys.stderr)
             sys.exit(1)

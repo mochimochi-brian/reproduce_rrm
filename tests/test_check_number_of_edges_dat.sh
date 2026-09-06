@@ -176,6 +176,31 @@ EOF
 expect_fail "bare after cluster" "$OUT/after_v.dat" "$OUT/after_e.dat" \
     "unlabeled vertex 2 has no cluster"
 
+# Sparse IDs must not grow arrays to max(id). GAP writes 1..N.
+cat >"$OUT/sparse_v.dat" <<'EOF'
+subgraph cluster_0 { label="0";
+fontsize="30pt"
+1[label="0 ()"]
+3[label="0 (2,3)"]
+}
+EOF
+cat >"$OUT/sparse_e.dat" <<'EOF'
+1--3
+EOF
+expect_fail "sparse ids" "$OUT/sparse_v.dat" "$OUT/sparse_e.dat" \
+    "vertex ids must be contiguous"
+
+cat >"$OUT/huge_v.dat" <<'EOF'
+subgraph cluster_0 { label="0";
+fontsize="30pt"
+1[label="0 ()"]
+1000000000[label="0 (2,3)"]
+}
+EOF
+: >"$OUT/huge_e.dat"
+expect_fail "huge id" "$OUT/huge_v.dat" "$OUT/huge_e.dat" \
+    "vertex ids must be contiguous"
+
 # Local Au5Ag dat if present (generated artifacts are not in git).
 if [[ -f "${ROOT}/vertices_Au5Ag_AFIR.dat" && -f "${ROOT}/edges_Au5Ag_AFIR.dat" ]]; then
     expect_ok "Au5Ag dat" "${ROOT}/vertices_Au5Ag_AFIR.dat" "${ROOT}/edges_Au5Ag_AFIR.dat"
