@@ -47,15 +47,16 @@ it indicates that the resulting RRM in shape space has `n` connected components 
 * Core Python script `rrm_reconstruction_v18.py` that handles parsing GRRM output and preparing data
 * GAP script `generate_rrm_v11.g` that performs group-theoretic computations (original)
 * Faster sequential GAP script `generate_rrm_v11_fast.g` (same `generate_rrm` API as v11: O(1) vertex index, streamed writes, fail-closed Pechukas; not a later Teramoto version)
-* Helper Python script for validation `check_number_of_edges_v3.py`
+* Helper Python script for validation `check_number_of_edges_v3.py` (DOT; used by the demo)
+* Streaming helper `check_number_of_edges_dat.py` for `vertices_*.dat` / `edges_*.dat` (same EQ-number degree check; use this for n=8+ maps that skip Graphviz)
 * Shell script to tie it all together `reproduce_rrm_demo.sh`
 
 The intended product of the GAP step is the labeled files `vertices_*.dat` and `edges_*.dat`: each vertex is an EQ (or its inversion isomer) plus a CNPI permutation, and each edge is a TS plus a permutation. The Graphviz DOT/PNG is a convenience for small maps, not the reconstruction itself. See [Scale of the labeled map](#scale-of-the-labeled-map) for when those dat files stop being a practical artifact.
 
 ## Advanced Usage
 1. Run the Python preprocessing: python3 rrm_reconstruction_v18.py <EQ_list.log> <TS_list.log> <TS_file_prefix> <output.g> – this generates a GAP script with symmetry information (stored as <output.g>).
-2. Run GAP on the generated script to compute the RRM graph data: `gap -b -q -m 12g generate_rrm_v11_fast.g` (or `generate_rrm_v11.g`; use the appropriate memory flag). This will produce vertices_*.dat and edges_*.dat files. The demo script still runs a single GAP process.
-3. Combine the output into a Graphviz file and render it: The demo script automates this using cat and calling `dot`. If doing manually, you would take the contents of the .dat files and format them into a DOT file (see the script for the exact steps) and then run Graphviz’s `dot -Tpng` to get an image. Skip this step when the labeled graph is large; `dot` is optional and will fail or take prohibitive time well before GAP itself does.
+2. Run GAP on the generated script to compute the RRM graph data: `gap -b -q -m 12g generate_rrm_v11_fast.g` (or `generate_rrm_v11.g`; use the appropriate memory flag). This will produce vertices_*.dat and edges_*.dat files. The demo script still runs a single GAP process. After GAP, `python3 check_number_of_edges_dat.py vertices.dat edges.dat` checks that vertices with the same EQ number have the same degree; it does not need a DOT file.
+3. Combine the output into a Graphviz file and render it: The demo script automates this using cat and calling `dot`. If doing manually, you would take the contents of the .dat files and format them into a DOT file (see the script for the exact steps) and then run Graphviz’s `dot -Tpng` to get an image. Skip this step when the labeled graph is large; `dot` is optional and will fail or take prohibitive time well before GAP itself does. The demo still runs `check_number_of_edges_v3.py` on the DOT file.
 
 ## Options
 * `vlabel = true or false`, if it is set to true, the vertex labels are included in the file `rrm_Au5Ag_AFIR.dot`. Each vertex label comprises the corresponding EQ number n (EQn in the input file \*EQ_list.log) or n\* if it is an inversion isomer of EQn, and the permutation from the reference structure (EQn or EQn*). 
@@ -77,7 +78,7 @@ The table is an order of magnitude for **monometallic** maps with a GRRM catalog
 
 That Au7 expansion is about 3 MB of vertices and 26 MB of edges; the rendered PNG is hundreds of MB. Skip Graphviz `dot` for maps in that range and above. For maps that still fit on disk, increase the memory available to GAP with `-m` (the examples use `-m 12g`). Details: [GAP documentation](https://www.gap-system.org/). The paper (see [How to Cite](#how-to-cite)) describes the reconstruction; this table is only about file size.
 
-The helper `check_number_of_edges_v3.py` reads the whole DOT file into memory. Checking n=8+ outputs would need a streaming rewrite of that script; it is not required for writing the dat files.
+The demo helper `check_number_of_edges_v3.py` reads the whole DOT file into memory. For n=8+ maps, skip `dot` and run `python3 check_number_of_edges_dat.py vertices_*.dat edges_*.dat` instead: it streams the labeled files and keeps only an O(number of vertices) degree table. The check is not required for writing the dat files.
 
 ## Limitations
 * Sample data of GRRM output is in the directory Metal. The files required are `***EQ_list.log`, `***TS_list.log`, and `***TSn.log` (`n` is the indices of the transition states.).
