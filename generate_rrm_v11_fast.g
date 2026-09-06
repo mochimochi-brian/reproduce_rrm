@@ -11,6 +11,8 @@
 # batch stop. A Pechukas violation also FORCE_QUIT_GAP(1) before writing dat
 # files. Set RRM_CONTINUE_ON_PECHUKAS=1 (or GAP variable
 # RRM_CONTINUE_ON_PECHUKAS:=true) to restore v11 print-and-continue.
+# Optional workers: generate_rrm_vertices and generate_rrm_edge_shard are
+# called by generate_rrm_v11_parallel.sh. Sequential generate_rrm is unchanged.
 #
 # vfile : file to save vertex information
 # efile : file to save edge information
@@ -266,5 +268,37 @@ generate_rrm:=function(vfile, efile, sym, ur, urt, ss, org_eq, org_ts, labels...
 	RrmWriteVertices(vfile, ur, org_eq, built.rt, vlabel);
 	RrmWriteEdges(efile, sym, urt, ss, org_ts, built.offset, built.idx, ur, elabel, 1, Length(ss));
 	return;
+end;;
+
+generate_rrm_vertices:=function(vfile, sym, ur, urt, ss, org_eq, org_ts, labels...)
+	local vlabel, built;
+	if Length(labels)=0 then
+		vlabel:=true;
+	else
+		vlabel:=labels[1];
+	fi;
+	built:=RrmBuildTransversals(sym, ur);
+	RrmCheckPechukas(sym, ur, urt, ss, org_eq, org_ts, built.rt);
+	RrmWriteVertices(vfile, ur, org_eq, built.rt, vlabel);
+	Print("RRM_NVERT=", built.nvert, "\n");
+	Print("RRM_NTS=", Length(ss), "\n");
+	return built.nvert;
+end;;
+
+# Workers recompute RrmBuildTransversals independently. Edge ids match the
+# master's vertex file only if RightTransversal(sym, ur[i]) enumerates the
+# same order in every process (GAP -r, same Reads, same first call).
+# RRM_NVERT checks counts, not permutation of rt[i]. org_eq is unused here
+# and kept for generate_rrm signature parity.
+generate_rrm_edge_shard:=function(efile, lo, hi, sym, ur, urt, ss, org_eq, org_ts, labels...)
+	local elabel, built;
+	elabel:=true;
+	if Length(labels)>=1 then
+		elabel:=labels[1];
+	fi;
+	built:=RrmBuildTransversals(sym, ur);
+	RrmWriteEdges(efile, sym, urt, ss, org_ts, built.offset, built.idx, ur, elabel, lo, hi);
+	Print("RRM_NVERT=", built.nvert, "\n");
+	return built.nvert;
 end;;
 

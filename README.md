@@ -47,6 +47,7 @@ it indicates that the resulting RRM in shape space has `n` connected components 
 * Core Python script `rrm_reconstruction_v18.py` that handles parsing GRRM output and preparing data
 * GAP script `generate_rrm_v11.g` that performs group-theoretic computations (original)
 * Faster sequential GAP script `generate_rrm_v11_fast.g` (same `generate_rrm` API as v11: O(1) vertex index, streamed writes, fail-closed Pechukas; not a later Teramoto version)
+* Optional driver `generate_rrm_v11_parallel.sh` for process-parallel edge writes (`GAP_WORKERS`, default 1). It calls entry points in `generate_rrm_v11_fast.g`; there is no second GAP algorithm file.
 * Helper Python script for validation `check_number_of_edges_v3.py` (DOT; used by the demo)
 * Streaming helper `check_number_of_edges_dat.py` for `vertices_*.dat` / `edges_*.dat` (same EQ-number degree check; use this for n=8+ maps that skip Graphviz)
 * Shell script to tie it all together `reproduce_rrm_demo.sh`
@@ -55,13 +56,14 @@ The intended product of the GAP step is the labeled files `vertices_*.dat` and `
 
 ## Advanced Usage
 1. Run the Python preprocessing: python3 rrm_reconstruction_v18.py <EQ_list.log> <TS_list.log> <TS_file_prefix> <output.g> – this generates a GAP script with symmetry information (stored as <output.g>).
-2. Run GAP on the generated script to compute the RRM graph data: `gap -b -q -m 12g generate_rrm_v11_fast.g` (or `generate_rrm_v11.g`; use the appropriate memory flag). This will produce vertices_*.dat and edges_*.dat files. The demo script still runs a single GAP process. After GAP, `python3 check_number_of_edges_dat.py vertices.dat edges.dat` checks that vertices with the same EQ number have the same degree; it does not need a DOT file.
+2. Run GAP on the generated script to compute the RRM graph data: `gap -b -q -m 12g generate_rrm_v11_fast.g` (or `generate_rrm_v11.g`; use the appropriate memory flag). This will produce vertices_*.dat and edges_*.dat files. For larger maps you can instead run `GAP_WORKERS=k ./generate_rrm_v11_parallel.sh vertices.dat edges.dat data/MOL_AFIR.g` (default `k=1` is the same sequential `generate_rrm` call; `k>1` splits TS edge writes across processes). The demo script still runs a single GAP process. After GAP, `python3 check_number_of_edges_dat.py vertices.dat edges.dat` checks that vertices with the same EQ number have the same degree; it does not need a DOT file.
 3. Combine the output into a Graphviz file and render it: The demo script automates this using cat and calling `dot`. If doing manually, you would take the contents of the .dat files and format them into a DOT file (see the script for the exact steps) and then run Graphviz’s `dot -Tpng` to get an image. Skip this step when the labeled graph is large; `dot` is optional and will fail or take prohibitive time well before GAP itself does. The demo still runs `check_number_of_edges_v3.py` on the DOT file.
 
 ## Options
 * `vlabel = true or false`, if it is set to true, the vertex labels are included in the file `rrm_Au5Ag_AFIR.dot`. Each vertex label comprises the corresponding EQ number n (EQn in the input file \*EQ_list.log) or n\* if it is an inversion isomer of EQn, and the permutation from the reference structure (EQn or EQn*). 
 * `elabel = true or false`, if it is set to true, the edge labels are included in the file `rrm_Au5Ag_AFIR.dot`. Each edge label comprises the corresponding TS number n (TSn in the input file \*TS_list.log) or n\* if it is an inversion isomer of TSn, and the permutation from the reference structures (TSn or TSn*).
 * `RRM_CONTINUE_ON_PECHUKAS`: `generate_rrm_v11_fast.g` stops with a non-zero GAP exit and does not write dat files if a path violates Pechukas's theorem. Set the environment variable `RRM_CONTINUE_ON_PECHUKAS=1`, or in GAP `RRM_CONTINUE_ON_PECHUKAS:=true;;` before `generate_rrm`, to restore the v11 print-and-continue behavior (needed for the AuCu4 demonstration below).
+* `GAP_WORKERS`: used by `generate_rrm_v11_parallel.sh`. Default `1` runs sequential `generate_rrm` (byte-identical to invoking GAP on `generate_rrm_v11_fast.g` directly) and writes `VFILE`/`EFILE` in that GAP process. For `k>1`, the master writes vertices to a staging file and runs the Pechukas checks; each worker writes an edge shard for a contiguous TS-index slice; shards are concatenated in TS-index order. Vertices and edges are published together only after every shard succeeds; a failed or interrupted `k>1` run leaves the previous `vertices`/`edges` files in place. Each `k>1` start deletes leftover numeric `edges.dat.part.N` shards (so `RRM_KEEP_SHARDS=1` shards from an earlier run are discarded when a new run begins). After a successful run those shards are deleted unless `RRM_KEEP_SHARDS=1` (or `true`), which keeps only the current split. Any other non-empty `RRM_KEEP_SHARDS` value is an error. Worker `.log` files and `${VFILE}.master.log` are always kept. Workers print `RRM_NVERT`; the driver aborts if a worker's count differs from the master's. `MEM` (default `12g`) is per GAP process, so `k` workers plus the master request about `(k+1)` times that memory.
 
 ## Scale of the labeled map
 The number of labeled vertices is on the order of (number of EQs) times |CNPI| / |point group of the EQ|. For a monometallic cluster the CNPI group contains S_n (and S_n x Z_2 when inversion copies are distinct), so the files grow as n!. Mixed-element maps are much cheaper: they use a Young subgroup of S_n. The bundled Au5Ag example has six atoms but only five identical gold atoms, and the labeled files are small (~1.7e3 vertices, ~1.0e4 edges, a few hundred kB).
@@ -71,7 +73,7 @@ The table is an order of magnitude for **monometallic** maps with a GRRM catalog
 | identical atoms n | order of S_n | typical labeled graph | usable as `vertices_*.dat` / `edges_*.dat`? |
 |---|---|---|---|
 | 7 (measured Au7 AFIR; not bundled here) | 5e3 | ~1e5 vertices, ~7e5 edges, tens of MB of text | yes |
-| 8 | 4e4 | ~1e6 vertices, ~1e7 edges, hundreds of MB | intended, with `generate_rrm_v11_fast.g` |
+| 8 | 4e4 | ~1e6 vertices, ~1e7 edges, hundreds of MB | intended, with `generate_rrm_v11_fast.g` (and optional `GAP_WORKERS`) |
 | 9 | 4e5 | ~1e7–1e8 edges, a few GB | maybe: streamed writes, raise GAP `-m`, do not run `dot` |
 | 10 | 4e6 | ~1e9 edges, tens of GB of text | not a practical artifact |
 | 12 | 5e8 | cannot materialize | no |
