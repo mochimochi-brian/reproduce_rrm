@@ -127,11 +127,22 @@ rrm_after_bg() {
 }
 
 rrm_publish_pair() {
-    trap '' INT TERM
-    mv "$concat_tmp" "$EFILE"
-    concat_tmp=""
-    mv "$v_stage" "$VFILE"
-    trap - EXIT INT TERM
+    # These moves only affect this unpublished generation. A failure cannot
+    # change the pair addressed by current.
+    mv -T -- "$concat_tmp" "$EFILE"
+    mv -T -- "$v_stage" "$VFILE"
+    if ! rrm_keep_shards; then
+        rrm_rm_numeric_shards "$EFILE" 0
+    fi
+    {
+        printf 'format=1\nnvert=%s\nnts=%s\nworkers=%s\n' "$nvert" "$nts" "$active"
+        (cd "$run_dir" && sha256sum vertices.dat edges.dat)
+    } > "$run_dir/manifest.txt"
+    ln -s -- "runs/${run_dir##*/}" "$publish_link"
+    # Same-filesystem rename is the sole publication point. Cleanup only removes
+    # staging paths and the temporary link, even if a signal arrives just after
+    # rename but before the shell executes its next command.
+    mv -Tf -- "$publish_link" "$bundle/current"
 }
 
 if [[ "${1:-}" == --assert-nvert ]]; then
@@ -177,14 +188,31 @@ if [[ "${1:-}" == --rm-numeric-shards ]]; then
     exit 0
 fi
 
-if [[ $# -lt 3 ]]; then
-    echo "Usage: $0 VFILE EFILE GFILE" >&2
-    exit 1
+bundle=""
+if [[ "${1:-}" == --bundle ]]; then
+    if [[ $# -ne 3 ]]; then
+        echo "Usage: GAP_WORKERS=2 $0 --bundle OUTPUT_DIR GFILE" >&2
+        exit 1
+    fi
+    bundle="$2"
+    GFILE="$3"
+    if [[ "$GAP_WORKERS" == 1 ]]; then
+        echo "--bundle requires GAP_WORKERS>1" >&2
+        exit 1
+    fi
+else
+    if [[ $# -ne 3 ]]; then
+        echo "Usage: $0 VFILE EFILE GFILE (GAP_WORKERS=1), or --bundle OUTPUT_DIR GFILE (GAP_WORKERS>1)" >&2
+        exit 1
+    fi
+    VFILE="$1"
+    EFILE="$2"
+    GFILE="$3"
+    if [[ "$GAP_WORKERS" != 1 ]]; then
+        echo "Parallel output now requires --bundle OUTPUT_DIR GFILE; resolve OUTPUT_DIR/current once to read both files. See README." >&2
+        exit 1
+    fi
 fi
-
-VFILE="$1"
-EFILE="$2"
-GFILE="$3"
 
 if ! [[ "$GAP_WORKERS" =~ ^[1-9][0-9]*$ ]]; then
     echo "GAP_WORKERS must be a positive integer (got '$GAP_WORKERS')" >&2
@@ -202,9 +230,9 @@ fi
 
 gap_src="$(rrm_gap_string "$GAPSRC")"
 gap_g="$(rrm_gap_string "$GFILE")"
-gap_e="$(rrm_gap_string "$EFILE")"
 
 if [[ "$GAP_WORKERS" -eq 1 ]]; then
+    gap_e="$(rrm_gap_string "$EFILE")"
     gap_v="$(rrm_gap_string "$VFILE")"
     "$GAP" -b -q -r -m "$MEM" <<EOF
 Read(${gap_src});
@@ -225,7 +253,31 @@ if [[ -n "${RRM_KEEP_SHARDS:-}" ]]; then
     esac
 fi
 
-mkdir -p "$(dirname -- "$VFILE")" "$(dirname -- "$EFILE")"
+# Serialize writers to a bundle. Readers do not acquire this lock.
+mkdir -p -- "$bundle"
+bundle="$(cd -- "$bundle" && pwd -P)"
+exec {bundle_lock}>"$bundle/.writer.lock"
+if ! flock -n "$bundle_lock"; then
+    echo "another writer is using $bundle" >&2
+    exit 1
+fi
+if [[ -e "$bundle/current" && ! -L "$bundle/current" ]]; then
+    echo "bundle/current must be a symlink or absent" >&2
+    exit 1
+fi
+if [[ -L "$bundle/runs" ]]; then
+    echo "bundle/runs must be an ordinary directory on the bundle filesystem" >&2
+    exit 1
+fi
+mkdir -p -- "$bundle/runs"
+if [[ "$(stat -c %d "$bundle/runs")" != "$(stat -c %d "$bundle")" ]]; then
+    echo "bundle/runs must be on the bundle filesystem" >&2
+    exit 1
+fi
+run_dir="$(mktemp -d "$bundle/runs/run.XXXXXXXX")"
+VFILE="$run_dir/vertices.dat"
+EFILE="$run_dir/edges.dat"
+publish_link="$run_dir/current.tmp"
 
 v_stage="${VFILE}.staging"
 concat_tmp="${EFILE}.concat"
@@ -241,7 +293,7 @@ rrm_cleanup_workers() {
     if [[ -n "${concat_tmp:-}" ]]; then
         rm -f "$concat_tmp"
     fi
-    rm -f "$v_stage"
+    rm -f -- "$v_stage" "$publish_link"
 }
 rrm_reap_pids() {
     wait 2>/dev/null || true
@@ -360,8 +412,3 @@ if [[ ! -f "$v_stage" ]]; then
     exit 1
 fi
 rrm_publish_pair
-if rrm_keep_shards; then
-    rrm_rm_numeric_shards "$EFILE" "$active" || true
-else
-    rrm_rm_numeric_shards "$EFILE" 0 || true
-fi
