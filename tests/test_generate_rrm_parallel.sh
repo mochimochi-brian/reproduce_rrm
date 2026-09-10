@@ -1,5 +1,5 @@
 #!/bin/bash
-# Issues #6 and #15: parallel edge generation and atomic bundle publication.
+# Issues #6, #15, #16: parallel edges, atomic publication, vertex correspondence.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -108,6 +108,8 @@ echo "rm-numeric-shards ok"
 
 echo "== publication, failure, reader and signal regression tests =="
 python3 "$ROOT/tests/test_parallel_publication.py"
+echo "== vertex correspondence contract and real GAP permutation regression =="
+GAP="$GAP" MEM="$MEM" python3 "$ROOT/tests/test_rrm_vertex_map.py"
 
 seq_v="$OUT/seq_v.dat"
 seq_e="$OUT/seq_e.dat"
@@ -170,6 +172,14 @@ if [[ -e "${w2d_e}.part.0" || -e "${w2d_e}.part.1" ]]; then
     exit 1
 fi
 echo "default shard cleanup ok"
+
+echo "== GAP_WORKERS=3 correspondence and byte equality =="
+GAP="$GAP" MEM="$MEM" GAP_WORKERS=3 \
+    "$DRIVER" --bundle "$OUT/w3" "$GFILE" >"$OUT/w3.log" 2>&1
+w3_run="$(readlink -f "$OUT/w3/current")"
+cmp -s "$w1_v" "$w3_run/vertices.dat"
+cmp -s "$w1_e" "$w3_run/edges.dat"
+cmp -s "$w2_run/vertices.dat.vertex-map" "$w3_run/vertices.dat.vertex-map"
 
 nvert_lines=$(grep -c '^RRM_NVERT=' "$w2_log" || true)
 if [[ "$nvert_lines" -lt 3 ]]; then

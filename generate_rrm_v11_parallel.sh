@@ -12,8 +12,18 @@ MEM="${MEM:-12g}"
 GAP_WORKERS="${GAP_WORKERS:-1}"
 GAPSRC="${ROOT}/generate_rrm_v11_fast.g"
 
-rrm_nvert_from_log() {
-    grep '^RRM_NVERT=' "$1" | tail -1 | cut -d= -f2
+rrm_count_from_log() {
+    local log="$1" key="$2" value
+    if ! value="$(grep "^${key}=" "$log")"; then
+        echo "missing $key or unreadable log: $log" >&2
+        return 1
+    fi
+    value="${value#*=}"
+    if ! [[ "$value" =~ ^(0|[1-9][0-9]*)$ ]]; then
+        echo "invalid or duplicate $key in $log" >&2
+        return 1
+    fi
+    printf '%s\n' "$value"
 }
 
 rrm_assert_nverts() {
@@ -21,7 +31,7 @@ rrm_assert_nverts() {
     local log got
     shift
     for log in "$@"; do
-        got="$(rrm_nvert_from_log "$log" || true)"
+        got="$(rrm_count_from_log "$log" RRM_NVERT)" || return 1
         if [[ "$got" != "$expected" ]]; then
             echo "nvert mismatch: $log has '${got}', expected '${expected}'" >&2
             return 1
@@ -131,11 +141,10 @@ rrm_publish_pair() {
     # change the pair addressed by current.
     mv -T -- "$concat_tmp" "$EFILE"
     mv -T -- "$v_stage" "$VFILE"
-    if ! rrm_keep_shards; then
-        rrm_rm_numeric_shards "$EFILE" 0
-    fi
+    mv -T -- "$master_map" "$VFILE.vertex-map"
     {
         printf 'format=1\nnvert=%s\nnts=%s\nworkers=%s\n' "$nvert" "$nts" "$active"
+        printf 'vertex_map_format=1\nvertex_map_sha256=%s\n' "$map_digest"
         (cd "$run_dir" && sha256sum vertices.dat edges.dat)
     } > "$run_dir/manifest.txt"
     ln -s -- "runs/${run_dir##*/}" "$publish_link"
@@ -143,6 +152,14 @@ rrm_publish_pair() {
     # staging paths and the temporary link, even if a signal arrives just after
     # rename but before the shell executes its next command.
     mv -Tf -- "$publish_link" "$bundle/current"
+    # Retain diagnostic maps/shards on every pre-publication failure.
+    if ! rrm_keep_shards; then
+        rrm_rm_numeric_shards "$EFILE" 0
+        local w
+        for ((w=0; w<active; w++)); do
+            rm -f -- "$EFILE.part.$w.vertex-map"
+        done
+    fi
 }
 
 if [[ "${1:-}" == --assert-nvert ]]; then
@@ -254,6 +271,7 @@ if [[ -n "${RRM_KEEP_SHARDS:-}" ]]; then
 fi
 
 # Serialize writers to a bundle. Readers do not acquire this lock.
+command -v python3 >/dev/null || { echo "parallel validation requires python3" >&2; exit 1; }
 mkdir -p -- "$bundle"
 bundle="$(cd -- "$bundle" && pwd -P)"
 exec {bundle_lock}>"$bundle/.writer.lock"
@@ -280,6 +298,7 @@ EFILE="$run_dir/edges.dat"
 publish_link="$run_dir/current.tmp"
 
 v_stage="${VFILE}.staging"
+master_map="${v_stage}.vertex-map"
 concat_tmp="${EFILE}.concat"
 gap_v="$(rrm_gap_string "$v_stage")"
 rm -f "$v_stage" "$concat_tmp"
@@ -331,12 +350,9 @@ if [[ "$master_rc" -ne 0 ]]; then
     exit 1
 fi
 
-nvert="$(rrm_nvert_from_log "$master_log" || true)"
-nts="$(grep '^RRM_NTS=' "$master_log" | tail -1 | cut -d= -f2 || true)"
-if ! [[ "${nvert:-}" =~ ^[0-9]+$ && "${nts:-}" =~ ^[0-9]+$ ]]; then
-    echo "master did not print RRM_NVERT/RRM_NTS" >&2
-    exit 1
-fi
+nvert="$(rrm_count_from_log "$master_log" RRM_NVERT)"
+nts="$(rrm_count_from_log "$master_log" RRM_NTS)"
+map_digest="$(python3 "$ROOT/check_rrm_vertex_map.py" "$nvert" "$master_map")"
 
 active="$(rrm_active_workers "$GAP_WORKERS" "$nts")"
 if [[ "$active" -eq 0 ]]; then
@@ -395,6 +411,10 @@ if [[ "$fail" -ne 0 ]]; then
 fi
 
 rrm_assert_nverts "$nvert" "${worker_logs[@]}"
+for ((w=0; w<active; w++)); do
+    python3 "$ROOT/check_rrm_vertex_map.py" "$nvert" "$EFILE.part.$w.vertex-map" \
+        --expected-sha256 "$map_digest" >/dev/null
+done
 
 : > "$concat_tmp"
 w=0
