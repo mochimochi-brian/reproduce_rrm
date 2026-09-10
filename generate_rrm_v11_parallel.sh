@@ -6,7 +6,7 @@
 # Edge shards are deleted after concat unless RRM_KEEP_SHARDS=1.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GAP="${GAP:-gap}"
 MEM="${MEM:-12g}"
 GAP_WORKERS="${GAP_WORKERS:-1}"
@@ -42,28 +42,10 @@ rrm_assert_nverts() {
 rrm_ts_slice() {
     # 0-based worker w of k, nts items -> lo hi (1-based inclusive; lo>hi if empty)
     local w="$1" k="$2" nts="$3"
-    local base rem start size i
-    base=$((nts / k))
-    rem=$((nts % k))
-    start=1
-    i=0
-    while [[ $i -lt $w ]]; do
-        size=$base
-        if [[ $i -lt $rem ]]; then
-            size=$((base + 1))
-        fi
-        start=$((start + size))
-        i=$((i + 1))
-    done
-    size=$base
-    if [[ $w -lt $rem ]]; then
-        size=$((base + 1))
-    fi
-    if [[ $size -eq 0 ]]; then
-        echo "$((nts + 1)) ${nts}"
-    else
-        echo "${start} $((start + size - 1))"
-    fi
+    local base=$((nts / k)) rem=$((nts % k)) start size
+    start=$((1 + w * base + (w < rem ? w : rem)))
+    size=$((base + (w < rem)))
+    echo "$start $((start + size - 1))"
 }
 
 rrm_active_workers() {
@@ -104,22 +86,6 @@ rrm_keep_shards() {
     esac
 }
 
-rrm_rm_numeric_shards() {
-    # ${efile}.part.<digits> only. keep_n>0 leaves .part.0 .. .part.(keep_n-1).
-    local efile="$1"
-    local keep_n="${2:-0}"
-    local f n
-    for f in "$efile".part.[0-9]*; do
-        [[ -f "$f" ]] || continue
-        n="${f##*.part.}"
-        if [[ "$n" =~ ^[0-9]+$ ]]; then
-            if [[ "$keep_n" -le 0 || $((10#$n)) -ge "$keep_n" ]]; then
-                rm -f "$f"
-            fi
-        fi
-    done
-}
-
 rrm_kill_own_children() {
     local child
     # jobs -p is a builtin and sees the job before $! is assigned. Do not
@@ -137,40 +103,26 @@ rrm_after_bg() {
 }
 
 rrm_publish_pair() {
-    # These moves only affect this unpublished generation. A failure cannot
-    # change the pair addressed by current.
-    mv -T -- "$concat_tmp" "$EFILE"
-    mv -T -- "$v_stage" "$VFILE"
-    mv -T -- "$master_map" "$VFILE.vertex-map"
     {
         printf 'format=1\nnvert=%s\nnts=%s\nworkers=%s\n' "$nvert" "$nts" "$active"
         printf 'vertex_map_format=1\nvertex_map_sha256=%s\n' "$map_digest"
         (cd "$run_dir" && sha256sum vertices.dat edges.dat)
     } > "$run_dir/manifest.txt"
     ln -s -- "runs/${run_dir##*/}" "$publish_link"
-    # Same-filesystem rename is the sole publication point. Cleanup only removes
-    # staging paths and the temporary link, even if a signal arrives just after
-    # rename but before the shell executes its next command.
+    # The whole generation is unpublished until this same-filesystem rename.
+    # Cleanup never removes its data, even if a signal arrives just after rename.
     mv -Tf -- "$publish_link" "$bundle/current"
     # Retain diagnostic maps/shards on every pre-publication failure.
     if ! rrm_keep_shards; then
-        rrm_rm_numeric_shards "$EFILE" 0
         local w
         for ((w=0; w<active; w++)); do
-            rm -f -- "$EFILE.part.$w.vertex-map"
+            rm -f -- "$EFILE.part.$w" "$EFILE.part.$w.vertex-map"
         done
     fi
 }
 
-if [[ "${1:-}" == --assert-nvert ]]; then
-    shift
-    if [[ $# -lt 2 ]]; then
-        echo "Usage: $0 --assert-nvert EXPECTED LOG..." >&2
-        exit 1
-    fi
-    rrm_assert_nverts "$@"
-    exit $?
-fi
+# Allow tests to call helpers without adding test-only CLI modes.
+[[ "${BASH_SOURCE[0]}" == "$0" ]] || return 0
 
 if [[ "${1:-}" == --active-workers ]]; then
     if [[ $# -ne 3 ]]; then
@@ -187,30 +139,6 @@ if [[ "${1:-}" == --ts-slice ]]; then
         exit 1
     fi
     rrm_ts_slice "$2" "$3" "$4"
-    exit 0
-fi
-
-if [[ "${1:-}" == --gap-string ]]; then
-    if [[ $# -ne 2 ]]; then
-        echo "Usage: $0 --gap-string PATH" >&2
-        exit 1
-    fi
-    rrm_gap_string "$2"
-    exit $?
-fi
-
-if [[ "${1:-}" == --kill-pids ]]; then
-    shift
-    rrm_kill_pids "$@"
-    exit 0
-fi
-
-if [[ "${1:-}" == --rm-numeric-shards ]]; then
-    if [[ $# -lt 2 || $# -gt 3 ]]; then
-        echo "Usage: $0 --rm-numeric-shards EFILE [KEEP_N]" >&2
-        exit 1
-    fi
-    rrm_rm_numeric_shards "$2" "${3:-0}"
     exit 0
 fi
 
@@ -306,22 +234,15 @@ VFILE="$run_dir/vertices.dat"
 EFILE="$run_dir/edges.dat"
 publish_link="$run_dir/current.tmp"
 
-v_stage="${VFILE}.staging"
-master_map="${v_stage}.vertex-map"
-concat_tmp="${EFILE}.concat"
-gap_v="$(rrm_gap_string "$v_stage")"
-rm -f "$v_stage" "$concat_tmp"
-rrm_rm_numeric_shards "$EFILE" 0
+master_map="${VFILE}.vertex-map"
+gap_v="$(rrm_gap_string "$VFILE")"
 
 master_pid=""
 pids=()
 rrm_cleanup_workers() {
     rrm_kill_pids "${master_pid:-}" "${pids[@]:-}"
     rrm_kill_own_children
-    if [[ -n "${concat_tmp:-}" ]]; then
-        rm -f "$concat_tmp"
-    fi
-    rm -f -- "$v_stage" "$publish_link"
+    rm -f -- "$publish_link"
 }
 rrm_reap_pids() {
     wait 2>/dev/null || true
@@ -364,15 +285,6 @@ nts="$(rrm_count_from_log "$master_log" RRM_NTS)"
 map_digest="$(python3 "$ROOT/check_rrm_vertex_map.py" "$nvert" "$master_map")"
 
 active="$(rrm_active_workers "$GAP_WORKERS" "$nts")"
-if [[ "$active" -eq 0 ]]; then
-    if [[ ! -f "$v_stage" ]]; then
-        echo "master did not write staged vertices" >&2
-        exit 1
-    fi
-    : > "$concat_tmp"
-    rrm_publish_pair
-    exit 0
-fi
 
 worker_logs=()
 w=0
@@ -383,7 +295,6 @@ while [[ $w -lt $active ]]; do
     worker_logs+=("$wlog")
     gap_shard="$(rrm_gap_string "$shard")"
     echo "=== worker ${w} TS ${lo}..${hi} ==="
-    rm -f "$shard"
     "$GAP" -b -q -r -m "$MEM" <<EOF >"$wlog" 2>&1 &
 Read(${gap_src});
 Read(${gap_g});
@@ -425,7 +336,7 @@ for ((w=0; w<active; w++)); do
         --expected-sha256 "$map_digest" >/dev/null
 done
 
-: > "$concat_tmp"
+: > "$EFILE"
 w=0
 while [[ $w -lt $active ]]; do
     part="${EFILE}.part.${w}"
@@ -433,11 +344,11 @@ while [[ $w -lt $active ]]; do
         echo "missing shard $part" >&2
         exit 1
     fi
-    cat "$part" >> "$concat_tmp"
+    cat "$part" >> "$EFILE"
     w=$((w + 1))
 done
-if [[ ! -f "$v_stage" ]]; then
-    echo "master did not write staged vertices" >&2
+if [[ ! -f "$VFILE" ]]; then
+    echo "master did not write vertices" >&2
     exit 1
 fi
 rrm_publish_pair

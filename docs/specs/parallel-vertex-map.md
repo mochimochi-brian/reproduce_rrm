@@ -84,7 +84,11 @@ Tables are never derived by parsing the DOT-like vertex display file.
 
 Failures before the `current` rename retain available diagnostic tables/logs
 and preserve the old published generation (or leave no `current` on the first
-run). The master table may retain its staging name if preparation failed early.
+run). The driver writes vertices, the master table, and concatenated edges under
+their final names inside the new, unpublished generation. Failed runs retain
+these files, including partial output, for diagnosis; only `current` marks a
+published generation. There are no per-file staging renames. Cleanup removes
+the temporary publication link but never a generation's data files.
 After successful publication, worker tables and numeric edge shards are removed
 unless `RRM_KEEP_SHARDS=1/true/TRUE`; master tables and logs remain. Cleanup failure
 or interruption after the rename can leave these temporary files and return

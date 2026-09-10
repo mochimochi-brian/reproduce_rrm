@@ -22,13 +22,11 @@ EDGE = re.compile(r'^(\d+)--(\d+)(?:\[label="[^"]*"\])?$')
 def _append(eq_of, deg, vid, eq):
     expected = len(deg)
     if vid != expected:
-        print(
+        raise ValueError(
             "Error: vertex ids must be contiguous starting at 1, got {} (expected {})".format(
                 vid, expected
-            ),
-            file=sys.stderr,
+            )
         )
-        sys.exit(1)
     eq_of.append(eq)
     deg.append(0)
 
@@ -54,28 +52,21 @@ def parse_vertices(filename):
                 vid = int(m.group(1))
                 number = m.group(2).split()[0]
                 if current_eq is not None and number != current_eq:
-                    print(
+                    raise ValueError(
                         "Error: vertex {} label {} does not match cluster {}".format(
                             vid, number, current_eq
-                        ),
-                        file=sys.stderr,
+                        )
                     )
-                    sys.exit(1)
                 _append(eq_of, deg, vid, number)
                 continue
             m = VERTEX_BARE.match(line)
             if m:
                 vid = int(m.group(1))
                 if current_eq is None:
-                    print(
-                        "Error: unlabeled vertex {} has no cluster".format(vid),
-                        file=sys.stderr,
-                    )
-                    sys.exit(1)
+                    raise ValueError("Error: unlabeled vertex {} has no cluster".format(vid))
                 _append(eq_of, deg, vid, current_eq)
                 continue
-            print("Error: cannot parse vertex line: {}".format(line), file=sys.stderr)
-            sys.exit(1)
+            raise ValueError("Error: cannot parse vertex line: {}".format(line))
     return eq_of, deg
 
 
@@ -88,8 +79,7 @@ def apply_edges(filename, eq_of, deg):
                 continue
             m = EDGE.match(line)
             if not m:
-                print("Error: cannot parse edge line: {}".format(line), file=sys.stderr)
-                sys.exit(1)
+                raise ValueError("Error: cannot parse edge line: {}".format(line))
             v1, v2 = int(m.group(1)), int(m.group(2))
             if (
                 v1 < 1
@@ -99,11 +89,7 @@ def apply_edges(filename, eq_of, deg):
                 or eq_of[v1] is None
                 or eq_of[v2] is None
             ):
-                print(
-                    "Error: edge {}--{} refers to a missing vertex".format(v1, v2),
-                    file=sys.stderr,
-                )
-                sys.exit(1)
+                raise ValueError("Error: edge {}--{} refers to a missing vertex".format(v1, v2))
             deg[v1] += 1
             if v1 != v2:
                 deg[v2] += 1
@@ -130,8 +116,12 @@ def main():
         print("Usage: {} <vertices.dat> <edges.dat>".format(sys.argv[0]), file=sys.stderr)
         sys.exit(1)
 
-    eq_of, deg = parse_vertices(sys.argv[1])
-    apply_edges(sys.argv[2], eq_of, deg)
+    try:
+        eq_of, deg = parse_vertices(sys.argv[1])
+        apply_edges(sys.argv[2], eq_of, deg)
+    except ValueError as error:
+        print(error, file=sys.stderr)
+        sys.exit(1)
     errors = check_consistency(eq_of, deg)
     if errors:
         print("Error: Inconsistent degrees for vertices with the same number found:")

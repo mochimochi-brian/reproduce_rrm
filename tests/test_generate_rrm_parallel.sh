@@ -18,6 +18,8 @@ if [[ ! -x "$DRIVER" ]]; then
     exit 1
 fi
 
+source "$DRIVER"
+
 echo "== cap workers at TS count =="
 if [[ "$("$DRIVER" --active-workers 8 5)" != 5 ]]; then
     echo "expected min(8,5)=5" >&2
@@ -62,16 +64,16 @@ fi
 echo "TS slice partition ok"
 
 echo "== GAP string escape =="
-if [[ "$("$DRIVER" --gap-string 'foo"bar')" != '"foo\"bar"' ]]; then
+if [[ "$(rrm_gap_string 'foo"bar')" != '"foo\"bar"' ]]; then
     echo "expected quoted path with escaped double-quote" >&2
     exit 1
 fi
-if [[ "$("$DRIVER" --gap-string 'a\b')" != '"a\\b"' ]]; then
+if [[ "$(rrm_gap_string 'a\b')" != '"a\\b"' ]]; then
     echo "expected backslash escaped for GAP" >&2
     exit 1
 fi
 set +e
-"$DRIVER" --gap-string $'a\nb' >"$OUT/gap_nl.out" 2>"$OUT/gap_nl.err"
+rrm_gap_string $'a\nb' >"$OUT/gap_nl.out" 2>"$OUT/gap_nl.err"
 nl_rc=$?
 set -e
 if [[ "$nl_rc" -eq 0 ]]; then
@@ -83,7 +85,7 @@ echo "GAP string escape ok"
 echo "== kill-pids terminates children =="
 sleep 60 &
 sleep_pid=$!
-"$DRIVER" --kill-pids "$sleep_pid"
+rrm_kill_pids "$sleep_pid"
 reaped=0
 i=0
 while [[ $i -lt 20 ]]; do
@@ -101,38 +103,6 @@ if [[ "$reaped" -ne 1 ]]; then
     exit 1
 fi
 echo "kill-pids ok"
-
-echo "== rm-numeric-shards keeps only the current split =="
-rm_dir="$OUT/rm-shards"
-mkdir -p "$rm_dir"
-: >"$rm_dir/e.dat.part.0"
-: >"$rm_dir/e.dat.part.1"
-: >"$rm_dir/e.dat.part.2"
-: >"$rm_dir/e.dat.part.3"
-: >"$rm_dir/e.dat.part.08"
-: >"$rm_dir/e.dat.part.0.log"
-"$DRIVER" --rm-numeric-shards "$rm_dir/e.dat" 2
-if [[ ! -e "$rm_dir/e.dat.part.0" || ! -e "$rm_dir/e.dat.part.1" ]]; then
-    echo "keep_n=2 must leave part.0 and part.1" >&2
-    ls -l "$rm_dir" >&2
-    exit 1
-fi
-if [[ -e "$rm_dir/e.dat.part.2" || -e "$rm_dir/e.dat.part.3" || -e "$rm_dir/e.dat.part.08" ]]; then
-    echo "keep_n=2 must delete part.2, part.3, and padded part.08" >&2
-    ls -l "$rm_dir" >&2
-    exit 1
-fi
-if [[ ! -e "$rm_dir/e.dat.part.0.log" ]]; then
-    echo "numeric-shard cleanup must not delete worker logs" >&2
-    exit 1
-fi
-"$DRIVER" --rm-numeric-shards "$rm_dir/e.dat" 0
-if [[ -e "$rm_dir/e.dat.part.0" || -e "$rm_dir/e.dat.part.1" ]]; then
-    echo "keep_n=0 must delete all numeric shards" >&2
-    ls -l "$rm_dir" >&2
-    exit 1
-fi
-echo "rm-numeric-shards ok"
 
 echo "== publication, failure, reader and signal regression tests =="
 python3 "$ROOT/tests/test_parallel_publication.py"
@@ -223,7 +193,7 @@ mkdir -p "$mismatch_dir"
 echo "RRM_NVERT=10" >"$mismatch_dir/a.log"
 echo "RRM_NVERT=11" >"$mismatch_dir/b.log"
 set +e
-"$DRIVER" --assert-nvert 10 "$mismatch_dir/a.log" "$mismatch_dir/b.log" >"$mismatch_dir/out.log" 2>&1
+rrm_assert_nverts 10 "$mismatch_dir/a.log" "$mismatch_dir/b.log" >"$mismatch_dir/out.log" 2>&1
 mismatch_rc=$?
 set -e
 if [[ "$mismatch_rc" -eq 0 ]]; then

@@ -49,6 +49,11 @@ expect_fail() {
         printf '%s\n' "$out" >&2
         exit 1
     fi
+    if [[ "$out" == *Traceback* ]]; then
+        echo "expected a CLI diagnostic without a traceback: $name" >&2
+        printf '%s\n' "$out" >&2
+        exit 1
+    fi
     local needle
     for needle in "$@"; do
         if ! grep -Fq -- "$needle" <<<"$out"; then
