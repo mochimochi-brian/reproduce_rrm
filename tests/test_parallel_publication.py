@@ -32,6 +32,9 @@ if mode == 'mismatch': mapping = mapping.replace('0\t1\t2', '0\t2\t1')
 if mode == 'invalid': mapping = mapping.replace('0\t1\t2', '0\t1\t1')
 if mode == 'truncated': mapping = mapping.rsplit('END', 1)[0]
 if mode == 'count': mapping = mapping.replace('MAP\t1\t1', 'MAP\t1\t2')
+if master and os.environ.get('FAIL_IO') == 'map':
+    Path(str(p) + '.vertex-map').write_text(mapping[:10])
+    sys.exit(73)
 if mode != 'missing': Path(str(p) + '.vertex-map').write_text(mapping)
 if mode == 'duplicate': print('RRM_NVERT=1')
 if master and mode == 'duplicate_ts': print('RRM_NTS=2')
@@ -39,6 +42,9 @@ def count(key, value):
     if mode == 'missing_' + key: return
     print('RRM_' + key.upper() + '=' + ('bad' if mode == 'invalid_' + key else value), flush=True)
 if master:
+    if os.environ.get('FAIL_IO') == 'vertices':
+        p.write_text('partial')
+        sys.exit(73)
     p.write_text(generation + '\n')
     count('nvert', '1')
     count('nts', os.environ.get('NTS', '2'))
@@ -60,7 +66,6 @@ args = sys.argv[1:]
 target = args[-1] if args else ''
 mode = os.environ.get('FAIL_IO', '')
 if (name == 'mv' and ((mode == 'vertices' and target.endswith('/vertices.dat')) or
-                     (mode == 'map' and target.endswith('/vertices.dat.vertex-map')) or
                      (mode == 'current' and target.endswith('/current')))):
     sys.exit(73)
 if name == 'sha256sum' and mode == 'manifest': sys.exit(74)
@@ -148,6 +153,7 @@ class PublicationTests(unittest.TestCase):
         self.assertFalse((self.snapshot() / 'edges.dat.part.0').exists())
         self.assertTrue((old / 'edges.dat.part.0.vertex-map').exists())
         self.assertFalse((self.snapshot() / 'edges.dat.part.0.vertex-map').exists())
+        self.assertTrue((self.snapshot() / 'edges.dat.part.0.log').exists())
 
     def test_vertex_map_failures_preserve_published_pair(self):
         for role in ('master', 'worker'):
@@ -217,8 +223,8 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(e.read_text(), 'old edges')
 
     def test_historical_second_move_failure_reproduces_mixed_pair(self):
-        # Frozen pre-fix publication order from Issue #15. The same injected
-        # vertices rename failure is exercised against the full driver above.
+        # Frozen pre-fix publication order from Issue #15. The current driver
+        # writes into a new generation; the full-driver cases inject write failures.
         v, e = self.base / 'vertices.dat', self.base / 'edges.dat'
         vs, es = self.base / 'v.staging', self.base / 'e.concat'
         for p, value in ((v, 'old'), (e, 'old'), (vs, 'new'), (es, 'new')):
@@ -271,6 +277,10 @@ class PublicationTests(unittest.TestCase):
         self.run_driver(ok=False, FAIL_IO='concat')
         self.assertTrue(list(self.bundle.glob('runs/*/edges.dat.part.0')))
         self.assertTrue(list(self.bundle.glob('runs/*/edges.dat.part.0.vertex-map')))
+        run, = self.bundle.glob('runs/*')
+        self.assertEqual((run / 'vertices.dat').read_text(), 'new\n')
+        self.assertEqual((run / 'edges.dat').read_text(), 'new\n')
+        self.assertTrue((run / 'vertices.dat.vertex-map').is_file())
         self.assertFalse(os.path.lexists(self.bundle / 'current'))
 
     def test_worker_failure_cancels_siblings(self):

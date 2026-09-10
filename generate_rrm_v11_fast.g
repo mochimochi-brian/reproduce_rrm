@@ -86,6 +86,11 @@ RrmBuildTransversals:=function(sym, ur)
 	return rec(rt:=rt, offset:=offset, nvert:=nvert, idx:=idx);
 end;;
 
+RrmInversionSuffix:=function(original, index)
+	if original<>index then return "*"; fi;
+	return "";
+end;;
+
 RrmCheckPechukas:=function(sym, ur, urt, ss, org_eq, org_ts, rt)
 	local homByEq, i, eq, actionHom, permGroup, pos1, pos2, stabPerm, stabEQs;
 	homByEq:=[];
@@ -109,18 +114,10 @@ RrmCheckPechukas:=function(sym, ur, urt, ss, org_eq, org_ts, rt)
 			stabEQs:=PreImage(actionHom,stabPerm);
 			if not IsSubgroup(stabEQs,urt[i]) then
 				Assert(0,false,"Violation of Pechukus theorem: \n");
-	        		if org_ts[i] = i then
-					Print("TS",i-1,":\n");
-				else
-					Print("TS",i-1,"*:\n");
-				fi;
+				Print("TS",i-1,RrmInversionSuffix(org_ts[i],i),":\n");
 
 				Print("the reactant and product are permutation isomers\n");
-                        	if org_eq[ss[i][1][1]]=ss[i][1][1] then
-					Print("EQ",org_eq[ss[i][1][1]]-1,"\n");
-				else
-					Print("EQ",org_eq[ss[i][1][1]]-1,"*\n");
-				fi;
+				Print("EQ",org_eq[ss[i][1][1]]-1,RrmInversionSuffix(org_eq[ss[i][1][1]],ss[i][1][1]),"\n");
 
 				Print("in what follows, minus 1 to convert to the atom labels\n");
 				Print("U(r) (for reactant):\n");
@@ -139,25 +136,13 @@ RrmCheckPechukas:=function(sym, ur, urt, ss, org_eq, org_ts, rt)
 				not IsSubgroup(ConjugateGroup(ur[ss[i][2][1]],ss[i][2][2]),urt[i]) then
 
 				Assert(0,false,"Violation of Pechukus theorem: \n");
-	        		if org_ts[i] = i then
-					Print("TS",i-1,":\n");
-				else
-					Print("TS",i-1,"*:\n");
-				fi;
+				Print("TS",i-1,RrmInversionSuffix(org_ts[i],i),":\n");
 
 				Print("reactant:\n");
-                        	if org_eq[ss[i][1][1]]=ss[i][1][1] then
-					Print("EQ",org_eq[ss[i][1][1]]-1,"\n");
-				else
-					Print("EQ",org_eq[ss[i][1][1]]-1,"*\n");
-				fi;
+				Print("EQ",org_eq[ss[i][1][1]]-1,RrmInversionSuffix(org_eq[ss[i][1][1]],ss[i][1][1]),"\n");
 
 				Print("product:\n");
-                        	if org_eq[ss[i][2][1]]=ss[i][2][1] then
-					Print("EQ",org_eq[ss[i][2][1]]-1,"\n");
-				else
-					Print("EQ",org_eq[ss[i][2][1]]-1,"*\n");
-				fi;
+				Print("EQ",org_eq[ss[i][2][1]]-1,RrmInversionSuffix(org_eq[ss[i][2][1]],ss[i][2][1]),"\n");
 
 				Print("in what follows, minus 1 to convert to the atom labels\n");
 				Print("U(r) (for reactant):\n");
@@ -173,7 +158,7 @@ RrmCheckPechukas:=function(sym, ur, urt, ss, org_eq, org_ts, rt)
 end;;
 
 RrmWriteVertices:=function(vfile, ur, org_eq, rt, vlabel)
-	local vstream, vid, ind, i, rturi, canon;
+	local vstream, vid, i, rturi, canon, suffix;
 	vstream:=OutputTextFile(vfile,false);
 	if vstream=fail then
 		Print("Error, cannot write ",vfile,"\n");
@@ -181,32 +166,17 @@ RrmWriteVertices:=function(vfile, ur, org_eq, rt, vlabel)
 	fi;
 	SetPrintFormattingStatus(vstream,false);
 	vid:=0;
-	ind:=0;
 	for i in [1..Length(ur)] do
+		if i>1 then AppendTo(vstream,"}\n"); fi;
+		suffix:=RrmInversionSuffix(org_eq[i],i);
+		AppendTo(vstream,"subgraph cluster_",i-1," { label=\"",org_eq[i]-1,suffix,"\";\n");
+		AppendTo(vstream,"fontsize=\"30pt\"\n");
 		for rturi in rt[i] do
 			vid:=vid+1;
-			if ind <> i then
-				if ind <> 0 then
-					AppendTo(vstream,"}\n");
-				fi;
-
-				if org_eq[i]=i then
-					AppendTo(vstream,"subgraph cluster_",i-1," { label=\"",org_eq[i]-1,"\";\n");
-				else
-					AppendTo(vstream,"subgraph cluster_",i-1," { label=\"",org_eq[i]-1,"*\";\n");
-				fi;
-
-				AppendTo(vstream,"fontsize=\"30pt\"\n");
-				ind:=i;
-			fi;
 
 			canon:=CanonicalRightCosetElement(ur[i],rturi);
 			if vlabel then
-				if org_eq[i]=i then
-					AppendTo(vstream,vid,"[label=\"",org_eq[i]-1," ",canon^-1,"\"]\n");
-				else
-					AppendTo(vstream,vid,"[label=\"",org_eq[i]-1,"* ",canon^-1,"\"]\n");
-				fi;
+				AppendTo(vstream,vid,"[label=\"",org_eq[i]-1,suffix," ",canon^-1,"\"]\n");
 			else
 				AppendTo(vstream,vid,"\n");
 			fi;
@@ -217,7 +187,7 @@ RrmWriteVertices:=function(vfile, ur, org_eq, rt, vlabel)
 end;;
 
 RrmWriteEdges:=function(efile, sym, urt, ss, org_ts, offset, idx, ur, elabel, lo, hi)
-	local estream, i, rturti, id1, id2, canon;
+	local estream, i, rturti, id1, id2, canon, suffix;
 	estream:=OutputTextFile(efile,false);
 	if estream=fail then
 		Print("Error, cannot write ",efile,"\n");
@@ -230,16 +200,13 @@ RrmWriteEdges:=function(efile, sym, urt, ss, org_ts, offset, idx, ur, elabel, lo
 			FORCE_QUIT_GAP(1);
 		fi;
 		for i in [lo..hi] do
+			suffix:=RrmInversionSuffix(org_ts[i],i);
 			for rturti in RightTransversal(sym,urt[i]) do
 				id1:=RrmVertexIndex(offset,idx,ur,ss[i][1][1],ss[i][1][2]^-1*rturti);
 				id2:=RrmVertexIndex(offset,idx,ur,ss[i][2][1],ss[i][2][2]^-1*rturti);
 				canon:=CanonicalRightCosetElement(urt[i],rturti);
 				if elabel then
-					if org_ts[i]=i then
-						AppendTo(estream,id1,"--",id2,"[label=\"",org_ts[i]-1," ",canon^-1,"\"]\n");
-					else
-						AppendTo(estream,id1,"--",id2,"[label=\"",org_ts[i]-1,"* ",canon^-1,"\"]\n");
-					fi;
+					AppendTo(estream,id1,"--",id2,"[label=\"",org_ts[i]-1,suffix," ",canon^-1,"\"]\n");
 				else
 					AppendTo(estream,id1,"--",id2,"\n");
 				fi;
