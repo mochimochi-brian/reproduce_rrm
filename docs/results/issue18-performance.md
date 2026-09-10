@@ -79,8 +79,8 @@ abec0fc716ad3ddb98062357b8c1268aea217a59143a878e8d272e0a2c3fd8b6  generate_rrm_v
 d8a86b4ff78f5736e1b2dfbc88ac58bb9883e49ce81e0d20230f61fde3f3a174  tools/rrm_bench.py
 8d282f55d21f0051e9edb3a258bd9f4de725ed24ecbf209dbe1963af2b578abd  tools/rrm_input_stats.g
 58703529ab150f279b7f229a1ad6cf323b45c8c8859e8235460268d0f9b0b64d  tools/make_synthetic_input.py
-78c23273b5b55fe7a3845a25314c959cfdb0d4a24431e3927305fddcaf75983c  tools/bench_campaign.sh
-532c41c785b4d07116eb72e6ae8f4db5a3577cb0ba28b30fca999eb4ff997d0e  tests/test_rrm_bench.sh
+d0d77a370a5cf56cadbf26702ac923dfa4171361741bdc007bfe3968125e58f9  tools/bench_campaign.sh
+ec03fb7cdbfbdebba2032b450d03a7eea47479475e55f5dc9d649f8e92a4903d  tests/test_rrm_bench.sh
 6c1a40b4c992b2e527bdc7aba753de7e8ca57ea170fdb65b8c04480e0114a632  data/bench/synth_n6_eq8_ts30.g
 9cef7594f04ec96800fe47f92e34478c065ef7daebadc9357f658b9714559a76  data/bench/synth_n7_eq10_ts40.g
 9feda9cc1715fe1779a62764b534f41b05a1f728a2d485ff2cb6acdd7c019834  data/bench/synth_n7_eq4_ts200_edge.g
@@ -234,7 +234,7 @@ shape, not a plausible reaction network.
 MEM=2g per GAP process, three repetitions, `vlabel = elabel = true`.
 Every configuration's map was byte-identical to `v11`'s on every input
 (`cmp` plus `tests/compare_rrm_dat.py --mode exact`), including the
-`synth-large` run where `v11` needed 158 s.
+`synth-large` runs where `v11` needed 157 s each.
 
 ### Au5Ag — bundled GRRM output, 1704 vertices, 10020 edges
 
@@ -260,17 +260,18 @@ Every configuration's map was byte-identical to `v11`'s on every input
 
 | config | wall median (s) | min-max (s) | stdev (s) | CPU total (s) | max single peak RSS (MiB) | sum of peaks (MiB) | concurrent peak RSS (MiB) | speedup vs v11 |
 |---|---|---|---|---|---|---|---|---|
-| v11 | 157.63 | one run only | - | 157.6 | 1816 | 1816 | 1816 | 1.00x |
-| fast | 2.94 | 2.90-3.04 | 0.07 | 2.9 | 654 | 654 | 654 | 53.59x |
-| par:1 | 2.88 | 2.79-2.90 | 0.06 | 2.9 | 654 | 657 | 657 | 54.74x |
-| par:2 | 6.37 | 6.16-6.37 | 0.12 | 8.9 | 610 | 1835 | 1173 | 24.76x |
-| par:4 | 7.19 | 6.95-7.21 | 0.15 | 13.6 | 610 | 2919 | 2211 | 21.93x |
+| v11 | 157.24 | 156.84-158.29 | 0.74 | 157.2 | 1816 | 1816 | 1816 | 1.00x |
+| fast | 2.79 | 2.72-2.82 | 0.05 | 2.8 | 654 | 654 | 654 | 56.43x |
+| par:1 | 2.81 | 2.79-2.84 | 0.03 | 2.8 | 654 | 657 | 657 | 56.00x |
+| par:2 | 6.21 | 6.18-6.33 | 0.08 | 8.7 | 610 | 1836 | 1171 | 25.31x |
+| par:4 | 6.96 | 6.92-7.53 | 0.34 | 13.5 | 610 | 2918 | 2202 | 22.58x |
 
-`v11` was given one repetition and a 3600 s limit here (`--reps-for v11=1`);
-it finished in 158 s, well inside the limit, so its speedup ratios are real
-measurements and not a bound. Nothing in this campaign was cut off. Had it
-been, the harness would have reported `n/a (timeout)` and excluded the run from
-every median and ratio.
+`v11` was given a 3600 s limit here and finished each repetition in about
+157 s, so its ratios are measurements and not bounds; nothing in this campaign
+was cut off. Had a run been cut off, the harness would have reported
+`n/a (timeout)`, excluded it from every median and ratio, and not repeated it
+(`--reps-for v11=1` is the option for an input where `v11` is too slow to
+repeat at all).
 
 ### synth-edge — 168 vertices, 341292 edges (edge-dominated stress shape)
 
@@ -300,7 +301,7 @@ The distinction that matters is not v11-versus-fast but *fixed cost* versus
 |---|---|---|---|---|---|---|---|
 | Au5Ag | 1.34 | 0.31 | 1.03 | 2.72 | 1.23 | 1.10 | 0.38 |
 | synth-medium | 1.15 | 0.18 | 0.97 | 2.71 | 1.07 | 1.13 | 0.50 |
-| synth-large | 2.94 | 1.65 | 1.30 | 7.19 | 2.26 | 2.45 | 2.37 |
+| synth-large | 2.79 | 1.59 | 1.20 | 6.96 | 2.28 | 2.38 | 2.37 |
 | synth-edge | 4.97 | 3.46 | 1.51 | 3.72 | 1.14 | 2.25 | 0.34 |
 
 "fast fixed cost" is wall minus GAP's own `generate_rrm` time: GAP startup with
@@ -321,19 +322,34 @@ Three things follow, and they explain every row of the result tables.
 2. **Each worker rebuilds what the master built.** `generate_rrm_edge_shard`
    calls `RrmBuildTransversals` itself — by design, since the correspondence is
    then validated across processes — so the index build is paid *k+1* times, and
-   each worker also pays its own GAP startup. On synth-large the workers spend
-   about 2.2 s of their 2.45 s on startup plus rebuild and only the remainder on
-   the shard, which is why `par:4` (7.19 s) is 2.4x *slower* than sequential
-   `fast` (2.94 s) on the same input.
+   each worker also pays its own GAP startup. On synth-large a `par:4` worker
+   needs 2.38 s to write a quarter of the edges, against 2.79 s for the whole
+   sequential run: about 1.2 s of that is GAP startup and parsing, and most of
+   what is left is rebuilding the index the master had already built. That is
+   why `par:4` (6.96 s) is 2.5x *slower* than sequential `fast` (2.79 s) here.
 3. **Publication scales with vertices times workers.** 2.37 s of the
    synth-large `par:4` run is after the last worker exits: concatenating 5.7 MB
-   of shards and validating four 41160-row vertex maps in Python. On synth-edge,
+   of shards and validating four 41160-row vertex maps in Python — more than the
+   entire sequential run takes. On synth-edge,
    with 168 vertices, the same residual is 0.34 s.
 
 Only when the edge writes dominate everything else does the split pay:
 synth-edge has 2032 edges per vertex, its master costs 1.14 s against a 4.97 s
 sequential run, and `par:4` reaches 3.72 s — 1.34x faster than sequential, on
 four workers, i.e. about 33% parallel efficiency.
+
+### Was anything I/O bound?
+
+No sequential run in this campaign was. For every `v11`, `fast` and `par:1` run
+across all seven reports, process CPU time equals wall time to within 0.2%, so
+the process was runnable essentially all the time and the writes (streamed, to
+a local filesystem with a warm page cache) were not a bottleneck: synth-edge
+writes 11.8 MB of edges in 5.0 s, about 2.4 MB/s, orders of magnitude below what
+the device delivers. The parallel runs are the opposite case — `par:4` on Au5Ag
+uses 5.8 s of CPU in 2.72 s of wall time — because several GAP processes run at
+once, not because of I/O. What is *not* measured here is a cold cache or a
+network filesystem; on `qc-cluster`, where the checkout is on NFS, the balance
+could differ, and re-running the campaign there is the way to find out.
 
 ### Load balance
 
@@ -394,10 +410,10 @@ depends on the vertex count.** `v11` finds a vertex id with
 endpoint, and it keeps the whole edge list in memory before writing it;
 `generate_rrm_v11_fast.g` looks the id up in a hash table and streams the
 writes. On the GAP computation alone the ratios measured were 15.8x (Au5Ag,
-1704 vertices), 10.5x (synth-medium, 4440), 93.1x (synth-large, 41160) and 1.2x
+1704 vertices), 10.5x (synth-medium, 4440), 97.5x (synth-large, 41160) and 1.2x
 (synth-edge, 168) — the win grows with the vertex count and nearly vanishes
 when there are few vertices to scan. End to end the same runs are 4.90x, 2.58x,
-53.59x and 1.26x, the difference being the ~1 s of GAP startup and parsing that
+56.43x and 1.26x, the difference being the ~1 s of GAP startup and parsing that
 the fast script cannot remove. Peak memory also improves, and for the same
 reason: 1100 -> 478 MiB on Au5Ag and 1816 -> 654 MiB on synth-large, since the
 edge list is no longer materialized.
@@ -411,7 +427,7 @@ edge-dominated one, and it costs memory.** `par:1` matches `fast` to within
 2%, so the driver's own overhead on the sequential path is negligible. For
 `k>1` the picture is the cost model above: master plus *k* rebuilds plus
 publication. Au5Ag `par:4` is 2.0x slower than `fast`, synth-large `par:4` is
-2.4x slower, and only synth-edge is faster (1.34x on four workers). At the same
+2.5x slower, and only synth-edge is faster (1.34x on four workers). At the same
 time the memory the job needs simultaneously grows nearly linearly in *k*
 (Au5Ag at MEM=2g: 477 MiB sequential, 888 MiB at `par:2`, 1747 MiB at `par:4`).
 

@@ -11,7 +11,7 @@
   "reps": 3,
   "mem": "2g",
   "timeout": 3600.0,
-  "started": "2026-09-10T12:25:44+0000",
+  "started": "2026-09-10T12:41:10+0000",
   "outdir": "/var/tmp/rrm-bench",
   "input": {
     "path": "data/bench/synth_n7_eq10_ts40.g",
@@ -90,7 +90,7 @@
     "mem_total_kb": 16461028,
     "python": "3.11.15",
     "git": {
-      "commit": "79a63f08b38231e42944ecd6bbd5adf5b74da4b2",
+      "commit": "da1618f8ac64d7796b1b6e1ffbd44c4a7ca484db",
       "dirty": true,
       "branch": "claude/issue-18-jmmn42"
     }
@@ -108,35 +108,35 @@
             "-m",
             "2g"
           ],
-          "wall_s": 157.6259,
+          "wall_s": 157.2385,
           "exit_code": 0,
           "timed_out": false,
-          "cpu_user_s": 154.099,
-          "cpu_sys_s": 3.509,
-          "cpu_total_s": 157.608,
-          "max_single_peak_rss_kb": 1859692,
+          "cpu_user_s": 155.764,
+          "cpu_sys_s": 1.46,
+          "cpu_total_s": 157.224,
+          "max_single_peak_rss_kb": 1859720,
           "log": "/var/tmp/rrm-bench/synth-large.v11.rep1/harness.log",
-          "samples": 7313,
+          "samples": 7304,
           "sample_interval_s": 0.02,
           "processes": [
             {
               "role": "gap",
-              "wall_s": 157.6041,
-              "cpu_s": 157.57,
-              "peak_rss_kb": 1859736
+              "wall_s": 157.215,
+              "cpu_s": 157.19,
+              "peak_rss_kb": 1859772
             }
           ],
-          "sum_peak_rss_kb": 1859736,
-          "sampled_max_single_peak_rss_kb": 1859736,
-          "concurrent_peak_rss_kb": 1859736,
+          "sum_peak_rss_kb": 1859772,
+          "sampled_max_single_peak_rss_kb": 1859772,
+          "concurrent_peak_rss_kb": 1859772,
           "concurrent_peak_breakdown_kb": {
-            "gap": 1859736
+            "gap": 1859772
           },
           "rep": 1,
           "run_dir": "/var/tmp/rrm-bench/synth-large.v11.rep1",
           "gap_read_ms": 5,
-          "gap_generate_ms": 153298,
-          "gap_runtime_ms": 154096,
+          "gap_generate_ms": 155010,
+          "gap_runtime_ms": 155764,
           "output": {
             "vertices": {
               "lines": 41190,
@@ -149,31 +149,147 @@
               "sha256": "307e5b360fc79a2fa97275fb8dee5d4a5e07cc7b468db34d26cbdee9fc16eac5"
             }
           }
+        },
+        {
+          "cmd": [
+            "gap",
+            "-b",
+            "-q",
+            "-r",
+            "-m",
+            "2g"
+          ],
+          "wall_s": 158.2856,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 156.864,
+          "cpu_sys_s": 1.416,
+          "cpu_total_s": 158.28,
+          "max_single_peak_rss_kb": 1859728,
+          "log": "/var/tmp/rrm-bench/synth-large.v11.rep2/harness.log",
+          "samples": 7339,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "gap",
+              "wall_s": 158.2654,
+              "cpu_s": 158.25,
+              "peak_rss_kb": 1859712
+            }
+          ],
+          "sum_peak_rss_kb": 1859712,
+          "sampled_max_single_peak_rss_kb": 1859712,
+          "concurrent_peak_rss_kb": 1859712,
+          "concurrent_peak_breakdown_kb": {
+            "gap": 1859712
+          },
+          "rep": 2,
+          "run_dir": "/var/tmp/rrm-bench/synth-large.v11.rep2",
+          "gap_read_ms": 0,
+          "gap_generate_ms": 156084,
+          "gap_runtime_ms": 156860,
+          "output": {
+            "vertices": {
+              "lines": 41190,
+              "bytes": 1288820,
+              "sha256": "7ac554fe48f65ecff76f0c9828efb56d01148f3747cce7c4508cfa7f9e51a7e3"
+            },
+            "edges": {
+              "lines": 147000,
+              "bytes": 5671287,
+              "sha256": "307e5b360fc79a2fa97275fb8dee5d4a5e07cc7b468db34d26cbdee9fc16eac5"
+            }
+          },
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 41160 vertices, 147000 edges (mode=exact, key=-)"
+          }
+        },
+        {
+          "cmd": [
+            "gap",
+            "-b",
+            "-q",
+            "-r",
+            "-m",
+            "2g"
+          ],
+          "wall_s": 156.8447,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 155.426,
+          "cpu_sys_s": 1.4,
+          "cpu_total_s": 156.826,
+          "max_single_peak_rss_kb": 1859740,
+          "log": "/var/tmp/rrm-bench/synth-large.v11.rep3/harness.log",
+          "samples": 7291,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "gap",
+              "wall_s": 156.841,
+              "cpu_s": 156.81,
+              "peak_rss_kb": 1859728
+            }
+          ],
+          "sum_peak_rss_kb": 1859728,
+          "sampled_max_single_peak_rss_kb": 1859728,
+          "concurrent_peak_rss_kb": 1859728,
+          "concurrent_peak_breakdown_kb": {
+            "gap": 1859728
+          },
+          "rep": 3,
+          "run_dir": "/var/tmp/rrm-bench/synth-large.v11.rep3",
+          "gap_read_ms": 6,
+          "gap_generate_ms": 154633,
+          "gap_runtime_ms": 155424,
+          "output": {
+            "vertices": {
+              "lines": 41190,
+              "bytes": 1288820,
+              "sha256": "7ac554fe48f65ecff76f0c9828efb56d01148f3747cce7c4508cfa7f9e51a7e3"
+            },
+            "edges": {
+              "lines": 147000,
+              "bytes": 5671287,
+              "sha256": "307e5b360fc79a2fa97275fb8dee5d4a5e07cc7b468db34d26cbdee9fc16eac5"
+            }
+          },
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 41160 vertices, 147000 edges (mode=exact, key=-)"
+          }
         }
       ],
-      "reps_requested": 1,
+      "reps_requested": 3,
+      "comparison": {
+        "byte_identical": null,
+        "note": "reference configuration"
+      },
       "summary": {
-        "reps": 1,
-        "ok_reps": 1,
+        "reps": 3,
+        "ok_reps": 3,
         "timed_out": false,
         "exit_codes": [
           0
         ],
-        "wall_median_s": 157.6259,
-        "wall_min_s": 157.6259,
-        "wall_max_s": 157.6259,
-        "wall_stdev_s": 0.0,
-        "cpu_total_median_s": 157.608,
-        "max_single_peak_rss_kb": 1859692,
-        "sampled_max_single_peak_rss_kb": 1859736,
-        "sum_peak_rss_kb": 1859736,
-        "concurrent_peak_rss_kb": 1859736,
-        "gap_generate_median_ms": 153298,
-        "gap_read_median_ms": 5
-      },
-      "comparison": {
-        "byte_identical": null,
-        "note": "reference configuration"
+        "wall_median_s": 157.2385,
+        "wall_min_s": 156.8447,
+        "wall_max_s": 158.2856,
+        "wall_stdev_s": 0.7447,
+        "cpu_total_median_s": 157.224,
+        "max_single_peak_rss_kb": 1859740,
+        "sampled_max_single_peak_rss_kb": 1859772,
+        "sum_peak_rss_kb": 1859772,
+        "concurrent_peak_rss_kb": 1859772,
+        "gap_generate_median_ms": 155010,
+        "gap_read_median_ms": 5.5
       }
     },
     "fast": {
@@ -188,35 +304,35 @@
             "-m",
             "2g"
           ],
-          "wall_s": 2.8978,
+          "wall_s": 2.8178,
           "exit_code": 0,
           "timed_out": false,
-          "cpu_user_s": 2.407,
-          "cpu_sys_s": 0.487,
-          "cpu_total_s": 2.894,
-          "max_single_peak_rss_kb": 669884,
+          "cpu_user_s": 2.344,
+          "cpu_sys_s": 0.472,
+          "cpu_total_s": 2.816,
+          "max_single_peak_rss_kb": 669672,
           "log": "/var/tmp/rrm-bench/synth-large.fast.rep1/harness.log",
-          "samples": 137,
+          "samples": 132,
           "sample_interval_s": 0.02,
           "processes": [
             {
               "role": "gap",
-              "wall_s": 2.8904,
-              "cpu_s": 2.87,
-              "peak_rss_kb": 668352
+              "wall_s": 2.8149,
+              "cpu_s": 2.81,
+              "peak_rss_kb": 668240
             }
           ],
-          "sum_peak_rss_kb": 668352,
-          "sampled_max_single_peak_rss_kb": 668352,
-          "concurrent_peak_rss_kb": 668352,
+          "sum_peak_rss_kb": 668240,
+          "sampled_max_single_peak_rss_kb": 668240,
+          "concurrent_peak_rss_kb": 668240,
           "concurrent_peak_breakdown_kb": {
-            "gap": 668352
+            "gap": 668240
           },
           "rep": 1,
           "run_dir": "/var/tmp/rrm-bench/synth-large.fast.rep1",
-          "gap_read_ms": 5,
-          "gap_generate_ms": 1646,
-          "gap_runtime_ms": 2406,
+          "gap_read_ms": 1,
+          "gap_generate_ms": 1590,
+          "gap_runtime_ms": 2341,
           "output": {
             "vertices": {
               "lines": 41190,
@@ -246,35 +362,35 @@
             "-m",
             "2g"
           ],
-          "wall_s": 3.0439,
+          "wall_s": 2.7866,
           "exit_code": 0,
           "timed_out": false,
-          "cpu_user_s": 2.491,
-          "cpu_sys_s": 0.55,
-          "cpu_total_s": 3.041,
-          "max_single_peak_rss_kb": 669888,
+          "cpu_user_s": 2.362,
+          "cpu_sys_s": 0.424,
+          "cpu_total_s": 2.786,
+          "max_single_peak_rss_kb": 669424,
           "log": "/var/tmp/rrm-bench/synth-large.fast.rep2/harness.log",
-          "samples": 140,
+          "samples": 130,
           "sample_interval_s": 0.02,
           "processes": [
             {
               "role": "gap",
-              "wall_s": 3.0276,
-              "cpu_s": 3.02,
-              "peak_rss_kb": 669664
+              "wall_s": 2.7757,
+              "cpu_s": 2.77,
+              "peak_rss_kb": 669472
             }
           ],
-          "sum_peak_rss_kb": 669664,
-          "sampled_max_single_peak_rss_kb": 669664,
-          "concurrent_peak_rss_kb": 669664,
+          "sum_peak_rss_kb": 669472,
+          "sampled_max_single_peak_rss_kb": 669472,
+          "concurrent_peak_rss_kb": 669472,
           "concurrent_peak_breakdown_kb": {
-            "gap": 669664
+            "gap": 669472
           },
           "rep": 2,
           "run_dir": "/var/tmp/rrm-bench/synth-large.fast.rep2",
-          "gap_read_ms": 5,
-          "gap_generate_ms": 1666,
-          "gap_runtime_ms": 2491,
+          "gap_read_ms": 6,
+          "gap_generate_ms": 1609,
+          "gap_runtime_ms": 2360,
           "output": {
             "vertices": {
               "lines": 41190,
@@ -304,35 +420,35 @@
             "-m",
             "2g"
           ],
-          "wall_s": 2.9412,
+          "wall_s": 2.7219,
           "exit_code": 0,
           "timed_out": false,
-          "cpu_user_s": 2.416,
-          "cpu_sys_s": 0.524,
-          "cpu_total_s": 2.94,
-          "max_single_peak_rss_kb": 669952,
+          "cpu_user_s": 2.345,
+          "cpu_sys_s": 0.376,
+          "cpu_total_s": 2.721,
+          "max_single_peak_rss_kb": 669548,
           "log": "/var/tmp/rrm-bench/synth-large.fast.rep3/harness.log",
-          "samples": 140,
+          "samples": 128,
           "sample_interval_s": 0.02,
           "processes": [
             {
               "role": "gap",
-              "wall_s": 2.9393,
-              "cpu_s": 2.93,
-              "peak_rss_kb": 668140
+              "wall_s": 2.7127,
+              "cpu_s": 2.7,
+              "peak_rss_kb": 667796
             }
           ],
-          "sum_peak_rss_kb": 668140,
-          "sampled_max_single_peak_rss_kb": 668140,
-          "concurrent_peak_rss_kb": 668140,
+          "sum_peak_rss_kb": 667796,
+          "sampled_max_single_peak_rss_kb": 667796,
+          "concurrent_peak_rss_kb": 667796,
           "concurrent_peak_breakdown_kb": {
-            "gap": 668140
+            "gap": 667796
           },
           "rep": 3,
           "run_dir": "/var/tmp/rrm-bench/synth-large.fast.rep3",
           "gap_read_ms": 5,
-          "gap_generate_ms": 1632,
-          "gap_runtime_ms": 2413,
+          "gap_generate_ms": 1576,
+          "gap_runtime_ms": 2342,
           "output": {
             "vertices": {
               "lines": 41190,
@@ -369,16 +485,16 @@
         "exit_codes": [
           0
         ],
-        "wall_median_s": 2.9412,
-        "wall_min_s": 2.8978,
-        "wall_max_s": 3.0439,
-        "wall_stdev_s": 0.075,
-        "cpu_total_median_s": 2.94,
-        "max_single_peak_rss_kb": 669952,
-        "sampled_max_single_peak_rss_kb": 669664,
-        "sum_peak_rss_kb": 669664,
-        "concurrent_peak_rss_kb": 669664,
-        "gap_generate_median_ms": 1646,
+        "wall_median_s": 2.7866,
+        "wall_min_s": 2.7219,
+        "wall_max_s": 2.8178,
+        "wall_stdev_s": 0.0489,
+        "cpu_total_median_s": 2.786,
+        "max_single_peak_rss_kb": 669672,
+        "sampled_max_single_peak_rss_kb": 669472,
+        "sum_peak_rss_kb": 669472,
+        "concurrent_peak_rss_kb": 669472,
+        "gap_generate_median_ms": 1590,
         "gap_read_median_ms": 5
       }
     },
@@ -392,36 +508,36 @@
             "/var/tmp/rrm-bench/synth-large.par1.rep1/edges.dat",
             "/home/user/reproduce_rrm/data/bench/synth_n7_eq10_ts40.g"
           ],
-          "wall_s": 2.8964,
+          "wall_s": 2.7859,
           "exit_code": 0,
           "timed_out": false,
-          "cpu_user_s": 2.439,
-          "cpu_sys_s": 0.456,
-          "cpu_total_s": 2.895,
-          "max_single_peak_rss_kb": 669492,
+          "cpu_user_s": 2.378,
+          "cpu_sys_s": 0.407,
+          "cpu_total_s": 2.786,
+          "max_single_peak_rss_kb": 669744,
           "log": "/var/tmp/rrm-bench/synth-large.par1.rep1/harness.log",
-          "samples": 137,
+          "samples": 130,
           "sample_interval_s": 0.02,
           "processes": [
             {
               "role": "other",
-              "wall_s": 2.8859,
+              "wall_s": 2.7731,
               "cpu_s": 0.0,
-              "peak_rss_kb": 3700
+              "peak_rss_kb": 3660
             },
             {
               "role": "gap",
-              "wall_s": 2.8643,
-              "cpu_s": 2.87,
-              "peak_rss_kb": 669208
+              "wall_s": 2.7515,
+              "cpu_s": 2.76,
+              "peak_rss_kb": 669612
             }
           ],
-          "sum_peak_rss_kb": 672908,
-          "sampled_max_single_peak_rss_kb": 669208,
-          "concurrent_peak_rss_kb": 672908,
+          "sum_peak_rss_kb": 673272,
+          "sampled_max_single_peak_rss_kb": 669612,
+          "concurrent_peak_rss_kb": 673272,
           "concurrent_peak_breakdown_kb": {
-            "other": 3700,
-            "gap": 669208
+            "other": 3660,
+            "gap": 669612
           },
           "rep": 1,
           "run_dir": "/var/tmp/rrm-bench/synth-large.par1.rep1",
@@ -452,36 +568,36 @@
             "/var/tmp/rrm-bench/synth-large.par1.rep2/edges.dat",
             "/home/user/reproduce_rrm/data/bench/synth_n7_eq10_ts40.g"
           ],
-          "wall_s": 2.7938,
+          "wall_s": 2.8393,
           "exit_code": 0,
           "timed_out": false,
-          "cpu_user_s": 2.347,
-          "cpu_sys_s": 0.447,
-          "cpu_total_s": 2.794,
-          "max_single_peak_rss_kb": 669492,
+          "cpu_user_s": 2.439,
+          "cpu_sys_s": 0.4,
+          "cpu_total_s": 2.839,
+          "max_single_peak_rss_kb": 669620,
           "log": "/var/tmp/rrm-bench/synth-large.par1.rep2/harness.log",
-          "samples": 131,
+          "samples": 132,
           "sample_interval_s": 0.02,
           "processes": [
             {
               "role": "other",
-              "wall_s": 2.7784,
+              "wall_s": 2.8231,
               "cpu_s": 0.0,
-              "peak_rss_kb": 3668
+              "peak_rss_kb": 3604
             },
             {
               "role": "gap",
-              "wall_s": 2.7567,
-              "cpu_s": 2.76,
-              "peak_rss_kb": 668768
+              "wall_s": 2.8013,
+              "cpu_s": 2.8,
+              "peak_rss_kb": 668788
             }
           ],
-          "sum_peak_rss_kb": 672436,
-          "sampled_max_single_peak_rss_kb": 668768,
-          "concurrent_peak_rss_kb": 672436,
+          "sum_peak_rss_kb": 672392,
+          "sampled_max_single_peak_rss_kb": 668788,
+          "concurrent_peak_rss_kb": 672392,
           "concurrent_peak_breakdown_kb": {
-            "other": 3668,
-            "gap": 668768
+            "other": 3604,
+            "gap": 668788
           },
           "rep": 2,
           "run_dir": "/var/tmp/rrm-bench/synth-large.par1.rep2",
@@ -512,36 +628,36 @@
             "/var/tmp/rrm-bench/synth-large.par1.rep3/edges.dat",
             "/home/user/reproduce_rrm/data/bench/synth_n7_eq10_ts40.g"
           ],
-          "wall_s": 2.8796,
+          "wall_s": 2.8078,
           "exit_code": 0,
           "timed_out": false,
-          "cpu_user_s": 2.419,
-          "cpu_sys_s": 0.46,
-          "cpu_total_s": 2.879,
-          "max_single_peak_rss_kb": 669600,
+          "cpu_user_s": 2.41,
+          "cpu_sys_s": 0.396,
+          "cpu_total_s": 2.807,
+          "max_single_peak_rss_kb": 669772,
           "log": "/var/tmp/rrm-bench/synth-large.par1.rep3/harness.log",
-          "samples": 136,
+          "samples": 131,
           "sample_interval_s": 0.02,
           "processes": [
             {
               "role": "other",
-              "wall_s": 2.8632,
+              "wall_s": 2.8014,
               "cpu_s": 0.0,
-              "peak_rss_kb": 3648
+              "peak_rss_kb": 3660
             },
             {
               "role": "gap",
-              "wall_s": 2.8416,
-              "cpu_s": 2.85,
-              "peak_rss_kb": 669460
+              "wall_s": 2.7798,
+              "cpu_s": 2.78,
+              "peak_rss_kb": 667444
             }
           ],
-          "sum_peak_rss_kb": 673108,
-          "sampled_max_single_peak_rss_kb": 669460,
-          "concurrent_peak_rss_kb": 673108,
+          "sum_peak_rss_kb": 671104,
+          "sampled_max_single_peak_rss_kb": 667444,
+          "concurrent_peak_rss_kb": 671104,
           "concurrent_peak_breakdown_kb": {
-            "other": 3648,
-            "gap": 669460
+            "other": 3660,
+            "gap": 667444
           },
           "rep": 3,
           "run_dir": "/var/tmp/rrm-bench/synth-large.par1.rep3",
@@ -581,15 +697,15 @@
         "exit_codes": [
           0
         ],
-        "wall_median_s": 2.8796,
-        "wall_min_s": 2.7938,
-        "wall_max_s": 2.8964,
-        "wall_stdev_s": 0.055,
-        "cpu_total_median_s": 2.879,
-        "max_single_peak_rss_kb": 669600,
-        "sampled_max_single_peak_rss_kb": 669460,
-        "sum_peak_rss_kb": 673108,
-        "concurrent_peak_rss_kb": 673108
+        "wall_median_s": 2.8078,
+        "wall_min_s": 2.7859,
+        "wall_max_s": 2.8393,
+        "wall_stdev_s": 0.0268,
+        "cpu_total_median_s": 2.807,
+        "max_single_peak_rss_kb": 669772,
+        "sampled_max_single_peak_rss_kb": 669612,
+        "sum_peak_rss_kb": 673272,
+        "concurrent_peak_rss_kb": 673272
       }
     },
     "par:2": {
@@ -602,73 +718,85 @@
             "/var/tmp/rrm-bench/synth-large.par2.rep1/bundle",
             "/home/user/reproduce_rrm/data/bench/synth_n7_eq10_ts40.g"
           ],
-          "wall_s": 6.3743,
+          "wall_s": 6.2114,
           "exit_code": 0,
           "timed_out": false,
-          "cpu_user_s": 7.431,
-          "cpu_sys_s": 1.451,
-          "cpu_total_s": 8.883,
-          "max_single_peak_rss_kb": 624404,
+          "cpu_user_s": 7.237,
+          "cpu_sys_s": 1.417,
+          "cpu_total_s": 8.654,
+          "max_single_peak_rss_kb": 624360,
           "log": "/var/tmp/rrm-bench/synth-large.par2.rep1/harness.log",
-          "samples": 298,
+          "samples": 283,
           "sample_interval_s": 0.02,
           "processes": [
             {
               "role": "other",
-              "wall_s": 6.3579,
+              "wall_s": 6.1956,
               "cpu_s": 0.01,
-              "peak_rss_kb": 4268
+              "peak_rss_kb": 4272
             },
             {
               "role": "master",
-              "wall_s": 2.2964,
-              "cpu_s": 2.3,
-              "peak_rss_kb": 622444
-            },
-            {
-              "role": "other",
-              "wall_s": 0.4119,
-              "cpu_s": 0.41,
-              "peak_rss_kb": 15204
-            },
-            {
-              "role": "worker:0",
-              "wall_s": 2.5976,
-              "cpu_s": 2.6,
-              "peak_rss_kb": 600052
-            },
-            {
-              "role": "worker:1",
-              "wall_s": 2.4675,
-              "cpu_s": 2.47,
-              "peak_rss_kb": 597776
-            },
-            {
-              "role": "other",
-              "wall_s": 0.4049,
-              "cpu_s": 0.41,
-              "peak_rss_kb": 15368
-            },
-            {
-              "role": "other",
-              "wall_s": 0.4322,
-              "cpu_s": 0.44,
-              "peak_rss_kb": 15176
+              "wall_s": 2.2851,
+              "cpu_s": 2.29,
+              "peak_rss_kb": 623388
             },
             {
               "role": "other",
               "wall_s": 0.0,
               "cpu_s": 0.0,
-              "peak_rss_kb": 1368
+              "peak_rss_kb": 2760
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 2008
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4092,
+              "cpu_s": 0.42,
+              "peak_rss_kb": 15168
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 2.471,
+              "cpu_s": 2.47,
+              "peak_rss_kb": 600344
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 2.4281,
+              "cpu_s": 2.42,
+              "peak_rss_kb": 597704
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4285,
+              "cpu_s": 0.42,
+              "peak_rss_kb": 15360
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4084,
+              "cpu_s": 0.41,
+              "peak_rss_kb": 15172
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 3396
             }
           ],
-          "sum_peak_rss_kb": 1871656,
-          "sampled_max_single_peak_rss_kb": 622444,
-          "concurrent_peak_rss_kb": 1189072,
+          "sum_peak_rss_kb": 1879572,
+          "sampled_max_single_peak_rss_kb": 623388,
+          "concurrent_peak_rss_kb": 1195388,
           "concurrent_peak_breakdown_kb": {
             "other": 4260,
-            "worker:0": 587036,
-            "worker:1": 597776
+            "worker:0": 593424,
+            "worker:1": 597704
           },
           "rep": 1,
           "run_dir": "/var/tmp/rrm-bench/synth-large.par2.rep1",
@@ -689,13 +817,13 @@
             "edges.dat.part.1.log",
             "vertices.dat.master.log"
           ],
-          "master_wall_s": 2.2964,
-          "master_cpu_s": 2.3,
-          "worker_wall_max_s": 2.5976,
-          "worker_wall_min_s": 2.4675,
-          "worker_cpu_total_s": 5.07,
+          "master_wall_s": 2.2851,
+          "master_cpu_s": 2.29,
+          "worker_wall_max_s": 2.471,
+          "worker_wall_min_s": 2.4281,
+          "worker_cpu_total_s": 4.89,
           "workers_observed": 2,
-          "driver_overhead_wall_s": 1.4803,
+          "driver_overhead_wall_s": 1.4553,
           "comparison": {
             "vertices": "identical",
             "edges": "identical",
@@ -711,79 +839,79 @@
             "/var/tmp/rrm-bench/synth-large.par2.rep2/bundle",
             "/home/user/reproduce_rrm/data/bench/synth_n7_eq10_ts40.g"
           ],
-          "wall_s": 6.3653,
+          "wall_s": 6.1823,
           "exit_code": 0,
           "timed_out": false,
-          "cpu_user_s": 7.326,
-          "cpu_sys_s": 1.665,
-          "cpu_total_s": 8.992,
-          "max_single_peak_rss_kb": 624424,
+          "cpu_user_s": 7.179,
+          "cpu_sys_s": 1.464,
+          "cpu_total_s": 8.643,
+          "max_single_peak_rss_kb": 624548,
           "log": "/var/tmp/rrm-bench/synth-large.par2.rep2/harness.log",
-          "samples": 297,
+          "samples": 288,
           "sample_interval_s": 0.02,
           "processes": [
             {
               "role": "other",
-              "wall_s": 6.3451,
-              "cpu_s": 0.01,
-              "peak_rss_kb": 4232
+              "wall_s": 6.171,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 4264
             },
             {
               "role": "master",
-              "wall_s": 2.1941,
-              "cpu_s": 2.18,
-              "peak_rss_kb": 623048
+              "wall_s": 2.2729,
+              "cpu_s": 2.26,
+              "peak_rss_kb": 623620
             },
             {
               "role": "other",
               "wall_s": 0.0,
               "cpu_s": 0.0,
-              "peak_rss_kb": 2668
+              "peak_rss_kb": 0
             },
             {
               "role": "other",
-              "wall_s": 0.4061,
-              "cpu_s": 0.41,
-              "peak_rss_kb": 15160
+              "wall_s": 0.415,
+              "cpu_s": 0.42,
+              "peak_rss_kb": 15144
             },
             {
               "role": "worker:0",
-              "wall_s": 2.6153,
-              "cpu_s": 2.62,
-              "peak_rss_kb": 600344
+              "wall_s": 2.4513,
+              "cpu_s": 2.44,
+              "peak_rss_kb": 599580
             },
             {
               "role": "worker:1",
-              "wall_s": 2.5936,
-              "cpu_s": 2.6,
-              "peak_rss_kb": 599452
+              "wall_s": 2.4727,
+              "cpu_s": 2.47,
+              "peak_rss_kb": 599756
             },
             {
               "role": "other",
-              "wall_s": 0.4295,
-              "cpu_s": 0.44,
-              "peak_rss_kb": 15164
-            },
-            {
-              "role": "other",
-              "wall_s": 0.4839,
-              "cpu_s": 0.48,
+              "wall_s": 0.409,
+              "cpu_s": 0.4,
               "peak_rss_kb": 15176
             },
             {
               "role": "other",
+              "wall_s": 0.4079,
+              "cpu_s": 0.4,
+              "peak_rss_kb": 15156
+            },
+            {
+              "role": "other",
               "wall_s": 0.0,
-              "cpu_s": 0.01,
+              "cpu_s": 0.0,
               "peak_rss_kb": 3528
             }
           ],
-          "sum_peak_rss_kb": 1878772,
-          "sampled_max_single_peak_rss_kb": 623048,
-          "concurrent_peak_rss_kb": 1201544,
+          "sum_peak_rss_kb": 1876224,
+          "sampled_max_single_peak_rss_kb": 623620,
+          "concurrent_peak_rss_kb": 1198596,
           "concurrent_peak_breakdown_kb": {
-            "other": 4224,
-            "worker:0": 597868,
-            "worker:1": 599452
+            "other": 4228,
+            "worker:0": 599580,
+            "worker:1": 594788
           },
           "rep": 2,
           "run_dir": "/var/tmp/rrm-bench/synth-large.par2.rep2",
@@ -804,13 +932,13 @@
             "edges.dat.part.1.log",
             "vertices.dat.master.log"
           ],
-          "master_wall_s": 2.1941,
-          "master_cpu_s": 2.18,
-          "worker_wall_max_s": 2.6153,
-          "worker_wall_min_s": 2.5936,
-          "worker_cpu_total_s": 5.22,
+          "master_wall_s": 2.2729,
+          "master_cpu_s": 2.26,
+          "worker_wall_max_s": 2.4727,
+          "worker_wall_min_s": 2.4513,
+          "worker_cpu_total_s": 4.91,
           "workers_observed": 2,
-          "driver_overhead_wall_s": 1.5559,
+          "driver_overhead_wall_s": 1.4367,
           "comparison": {
             "vertices": "identical",
             "edges": "identical",
@@ -826,85 +954,73 @@
             "/var/tmp/rrm-bench/synth-large.par2.rep3/bundle",
             "/home/user/reproduce_rrm/data/bench/synth_n7_eq10_ts40.g"
           ],
-          "wall_s": 6.1582,
+          "wall_s": 6.3285,
           "exit_code": 0,
           "timed_out": false,
-          "cpu_user_s": 7.191,
-          "cpu_sys_s": 1.407,
-          "cpu_total_s": 8.599,
-          "max_single_peak_rss_kb": 624472,
+          "cpu_user_s": 7.351,
+          "cpu_sys_s": 1.474,
+          "cpu_total_s": 8.825,
+          "max_single_peak_rss_kb": 624328,
           "log": "/var/tmp/rrm-bench/synth-large.par2.rep3/harness.log",
-          "samples": 287,
+          "samples": 293,
           "sample_interval_s": 0.02,
           "processes": [
             {
               "role": "other",
-              "wall_s": 6.1428,
-              "cpu_s": 0.0,
-              "peak_rss_kb": 4224
-            },
-            {
-              "role": "other",
-              "wall_s": 0.0,
-              "cpu_s": 0.0,
-              "peak_rss_kb": 0
+              "wall_s": 6.3106,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 4232
             },
             {
               "role": "master",
-              "wall_s": 2.2657,
-              "cpu_s": 2.27,
-              "peak_rss_kb": 622760
+              "wall_s": 2.3174,
+              "cpu_s": 2.31,
+              "peak_rss_kb": 623652
             },
             {
               "role": "other",
-              "wall_s": 0.4266,
+              "wall_s": 0.4347,
               "cpu_s": 0.43,
-              "peak_rss_kb": 15460
+              "peak_rss_kb": 15156
             },
             {
               "role": "worker:0",
-              "wall_s": 2.4213,
-              "cpu_s": 2.43,
-              "peak_rss_kb": 599152
+              "wall_s": 2.5197,
+              "cpu_s": 2.52,
+              "peak_rss_kb": 600064
             },
             {
               "role": "worker:1",
-              "wall_s": 2.4213,
-              "cpu_s": 2.42,
-              "peak_rss_kb": 597696
+              "wall_s": 2.4767,
+              "cpu_s": 2.47,
+              "peak_rss_kb": 599916
             },
             {
               "role": "other",
-              "wall_s": 0.4089,
-              "cpu_s": 0.41,
-              "peak_rss_kb": 15176
-            },
-            {
-              "role": "other",
-              "wall_s": 0.4273,
+              "wall_s": 0.4094,
               "cpu_s": 0.42,
-              "peak_rss_kb": 15184
+              "peak_rss_kb": 15124
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4557,
+              "cpu_s": 0.45,
+              "peak_rss_kb": 15204
             },
             {
               "role": "other",
               "wall_s": 0.0,
               "cpu_s": 0.0,
-              "peak_rss_kb": 3392
-            },
-            {
-              "role": "other",
-              "wall_s": 0.0,
-              "cpu_s": 0.0,
-              "peak_rss_kb": 996
+              "peak_rss_kb": 1864
             }
           ],
-          "sum_peak_rss_kb": 1874040,
-          "sampled_max_single_peak_rss_kb": 622760,
-          "concurrent_peak_rss_kb": 1201064,
+          "sum_peak_rss_kb": 1875212,
+          "sampled_max_single_peak_rss_kb": 623652,
+          "concurrent_peak_rss_kb": 1199540,
           "concurrent_peak_breakdown_kb": {
-            "other": 4216,
-            "worker:0": 599152,
-            "worker:1": 597696
+            "other": 4220,
+            "worker:0": 595404,
+            "worker:1": 599916
           },
           "rep": 3,
           "run_dir": "/var/tmp/rrm-bench/synth-large.par2.rep3",
@@ -925,13 +1041,13 @@
             "edges.dat.part.1.log",
             "vertices.dat.master.log"
           ],
-          "master_wall_s": 2.2657,
-          "master_cpu_s": 2.27,
-          "worker_wall_max_s": 2.4213,
-          "worker_wall_min_s": 2.4213,
-          "worker_cpu_total_s": 4.85,
+          "master_wall_s": 2.3174,
+          "master_cpu_s": 2.31,
+          "worker_wall_max_s": 2.5197,
+          "worker_wall_min_s": 2.4767,
+          "worker_cpu_total_s": 4.99,
           "workers_observed": 2,
-          "driver_overhead_wall_s": 1.4712,
+          "driver_overhead_wall_s": 1.4914,
           "comparison": {
             "vertices": "identical",
             "edges": "identical",
@@ -973,15 +1089,15 @@
         "exit_codes": [
           0
         ],
-        "wall_median_s": 6.3653,
-        "wall_min_s": 6.1582,
-        "wall_max_s": 6.3743,
-        "wall_stdev_s": 0.1223,
-        "cpu_total_median_s": 8.883,
-        "max_single_peak_rss_kb": 624472,
-        "sampled_max_single_peak_rss_kb": 623048,
-        "sum_peak_rss_kb": 1878772,
-        "concurrent_peak_rss_kb": 1201544
+        "wall_median_s": 6.2114,
+        "wall_min_s": 6.1823,
+        "wall_max_s": 6.3285,
+        "wall_stdev_s": 0.0774,
+        "cpu_total_median_s": 8.654,
+        "max_single_peak_rss_kb": 624548,
+        "sampled_max_single_peak_rss_kb": 623652,
+        "sum_peak_rss_kb": 1879572,
+        "concurrent_peak_rss_kb": 1199540
       }
     },
     "par:4": {
@@ -994,34 +1110,64 @@
             "/var/tmp/rrm-bench/synth-large.par4.rep1/bundle",
             "/home/user/reproduce_rrm/data/bench/synth_n7_eq10_ts40.g"
           ],
-          "wall_s": 7.2143,
+          "wall_s": 7.5253,
           "exit_code": 0,
           "timed_out": false,
-          "cpu_user_s": 11.335,
-          "cpu_sys_s": 3.094,
-          "cpu_total_s": 14.429,
-          "max_single_peak_rss_kb": 624344,
+          "cpu_user_s": 11.521,
+          "cpu_sys_s": 3.756,
+          "cpu_total_s": 15.277,
+          "max_single_peak_rss_kb": 624456,
           "log": "/var/tmp/rrm-bench/synth-large.par4.rep1/harness.log",
-          "samples": 337,
+          "samples": 347,
           "sample_interval_s": 0.02,
           "processes": [
             {
               "role": "other",
-              "wall_s": 7.1992,
+              "wall_s": 7.5207,
               "cpu_s": 0.01,
-              "peak_rss_kb": 4308
+              "peak_rss_kb": 4252
             },
             {
               "role": "master",
-              "wall_s": 2.2647,
-              "cpu_s": 2.25,
-              "peak_rss_kb": 623448
+              "wall_s": 2.2806,
+              "cpu_s": 2.28,
+              "peak_rss_kb": 623100
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4324,
+              "cpu_s": 0.43,
+              "peak_rss_kb": 15168
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 2.6993,
+              "cpu_s": 2.69,
+              "peak_rss_kb": 569600
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 2.6993,
+              "cpu_s": 2.69,
+              "peak_rss_kb": 568836
             },
             {
               "role": "other",
               "wall_s": 0.0,
               "cpu_s": 0.0,
-              "peak_rss_kb": 2704
+              "peak_rss_kb": 0
+            },
+            {
+              "role": "worker:2",
+              "wall_s": 2.5235,
+              "cpu_s": 2.49,
+              "peak_rss_kb": 567512
+            },
+            {
+              "role": "worker:3",
+              "wall_s": 2.7841,
+              "cpu_s": 2.61,
+              "peak_rss_kb": 570952
             },
             {
               "role": "other",
@@ -1031,80 +1177,38 @@
             },
             {
               "role": "other",
-              "wall_s": 0.4074,
-              "cpu_s": 0.42,
-              "peak_rss_kb": 15164
-            },
-            {
-              "role": "worker:0",
-              "wall_s": 2.4385,
-              "cpu_s": 2.43,
-              "peak_rss_kb": 569644
-            },
-            {
-              "role": "worker:1",
-              "wall_s": 2.4601,
-              "cpu_s": 2.44,
-              "peak_rss_kb": 569392
-            },
-            {
-              "role": "worker:2",
-              "wall_s": 2.5886,
-              "cpu_s": 2.41,
-              "peak_rss_kb": 566304
-            },
-            {
-              "role": "worker:3",
-              "wall_s": 2.4169,
-              "cpu_s": 2.42,
-              "peak_rss_kb": 571384
-            },
-            {
-              "role": "other",
-              "wall_s": 0.4072,
-              "cpu_s": 0.4,
-              "peak_rss_kb": 15160
-            },
-            {
-              "role": "other",
-              "wall_s": 0.4233,
-              "cpu_s": 0.41,
-              "peak_rss_kb": 15468
-            },
-            {
-              "role": "other",
-              "wall_s": 0.403,
-              "cpu_s": 0.41,
-              "peak_rss_kb": 15160
-            },
-            {
-              "role": "other",
-              "wall_s": 0.4481,
+              "wall_s": 0.4547,
               "cpu_s": 0.44,
+              "peak_rss_kb": 15176
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4144,
+              "cpu_s": 0.41,
+              "peak_rss_kb": 15176
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4159,
+              "cpu_s": 0.43,
               "peak_rss_kb": 15180
             },
             {
               "role": "other",
-              "wall_s": 0.0,
-              "cpu_s": 0.0,
-              "peak_rss_kb": 1992
-            },
-            {
-              "role": "other",
-              "wall_s": 0.0,
-              "cpu_s": 0.01,
-              "peak_rss_kb": 3528
+              "wall_s": 0.4329,
+              "cpu_s": 0.43,
+              "peak_rss_kb": 15328
             }
           ],
-          "sum_peak_rss_kb": 2988836,
-          "sampled_max_single_peak_rss_kb": 623448,
-          "concurrent_peak_rss_kb": 2264504,
+          "sum_peak_rss_kb": 2980280,
+          "sampled_max_single_peak_rss_kb": 623100,
+          "concurrent_peak_rss_kb": 2242280,
           "concurrent_peak_breakdown_kb": {
-            "other": 4268,
-            "worker:0": 569644,
-            "worker:1": 568212,
-            "worker:2": 550996,
-            "worker:3": 571384
+            "other": 4208,
+            "worker:0": 563880,
+            "worker:1": 560084,
+            "worker:2": 567512,
+            "worker:3": 546596
           },
           "rep": 1,
           "run_dir": "/var/tmp/rrm-bench/synth-large.par4.rep1",
@@ -1127,13 +1231,13 @@
             "edges.dat.part.3.log",
             "vertices.dat.master.log"
           ],
-          "master_wall_s": 2.2647,
-          "master_cpu_s": 2.25,
-          "worker_wall_max_s": 2.5886,
-          "worker_wall_min_s": 2.4169,
-          "worker_cpu_total_s": 9.7,
+          "master_wall_s": 2.2806,
+          "master_cpu_s": 2.28,
+          "worker_wall_max_s": 2.7841,
+          "worker_wall_min_s": 2.5235,
+          "worker_cpu_total_s": 10.48,
           "workers_observed": 4,
-          "driver_overhead_wall_s": 2.361,
+          "driver_overhead_wall_s": 2.4606,
           "comparison": {
             "vertices": "identical",
             "edges": "identical",
@@ -1149,93 +1253,105 @@
             "/var/tmp/rrm-bench/synth-large.par4.rep2/bundle",
             "/home/user/reproduce_rrm/data/bench/synth_n7_eq10_ts40.g"
           ],
-          "wall_s": 6.9479,
+          "wall_s": 6.9243,
           "exit_code": 0,
           "timed_out": false,
-          "cpu_user_s": 10.987,
-          "cpu_sys_s": 2.316,
-          "cpu_total_s": 13.303,
-          "max_single_peak_rss_kb": 624516,
+          "cpu_user_s": 10.936,
+          "cpu_sys_s": 2.246,
+          "cpu_total_s": 13.182,
+          "max_single_peak_rss_kb": 624312,
           "log": "/var/tmp/rrm-bench/synth-large.par4.rep2/harness.log",
-          "samples": 324,
+          "samples": 322,
           "sample_interval_s": 0.02,
           "processes": [
             {
               "role": "other",
-              "wall_s": 6.9458,
-              "cpu_s": 0.01,
-              "peak_rss_kb": 4260
+              "wall_s": 6.9166,
+              "cpu_s": 0.02,
+              "peak_rss_kb": 4256
             },
             {
               "role": "master",
-              "wall_s": 2.2514,
-              "cpu_s": 2.24,
-              "peak_rss_kb": 624400
+              "wall_s": 2.3189,
+              "cpu_s": 2.31,
+              "peak_rss_kb": 624384
             },
             {
               "role": "other",
-              "wall_s": 0.4297,
-              "cpu_s": 0.42,
-              "peak_rss_kb": 15164
+              "wall_s": 0.4062,
+              "cpu_s": 0.4,
+              "peak_rss_kb": 15168
             },
             {
               "role": "worker:0",
-              "wall_s": 2.136,
-              "cpu_s": 2.14,
-              "peak_rss_kb": 569964
+              "wall_s": 2.153,
+              "cpu_s": 2.16,
+              "peak_rss_kb": 569408
             },
             {
               "role": "worker:1",
-              "wall_s": 2.1137,
-              "cpu_s": 2.11,
-              "peak_rss_kb": 569096
+              "wall_s": 2.1317,
+              "cpu_s": 2.13,
+              "peak_rss_kb": 570200
             },
             {
               "role": "worker:2",
-              "wall_s": 2.3298,
-              "cpu_s": 2.18,
-              "peak_rss_kb": 566980
+              "wall_s": 2.0435,
+              "cpu_s": 2.04,
+              "peak_rss_kb": 566988
             },
             {
               "role": "worker:3",
-              "wall_s": 2.1576,
-              "cpu_s": 2.16,
-              "peak_rss_kb": 571176
+              "wall_s": 2.2385,
+              "cpu_s": 2.11,
+              "peak_rss_kb": 571640
             },
             {
               "role": "other",
-              "wall_s": 0.4088,
+              "wall_s": 0.407,
+              "cpu_s": 0.42,
+              "peak_rss_kb": 15176
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4061,
               "cpu_s": 0.41,
+              "peak_rss_kb": 15200
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4467,
+              "cpu_s": 0.44,
               "peak_rss_kb": 15180
             },
             {
               "role": "other",
-              "wall_s": 0.4295,
-              "cpu_s": 0.43,
-              "peak_rss_kb": 15176
+              "wall_s": 0.4339,
+              "cpu_s": 0.44,
+              "peak_rss_kb": 15212
             },
             {
               "role": "other",
-              "wall_s": 0.4291,
-              "cpu_s": 0.42,
-              "peak_rss_kb": 15240
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 392
             },
             {
               "role": "other",
-              "wall_s": 0.4058,
-              "cpu_s": 0.41,
-              "peak_rss_kb": 15176
+              "wall_s": 0.0,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 3544
             }
           ],
-          "sum_peak_rss_kb": 2981812,
-          "sampled_max_single_peak_rss_kb": 624400,
-          "concurrent_peak_rss_kb": 2258984,
+          "sum_peak_rss_kb": 2986748,
+          "sampled_max_single_peak_rss_kb": 624384,
+          "concurrent_peak_rss_kb": 2252816,
           "concurrent_peak_breakdown_kb": {
-            "other": 4248,
-            "worker:0": 568836,
-            "worker:1": 569096,
-            "worker:2": 547920,
-            "worker:3": 568884
+            "other": 4212,
+            "worker:0": 563896,
+            "worker:1": 564784,
+            "worker:2": 566988,
+            "worker:3": 552936
           },
           "rep": 2,
           "run_dir": "/var/tmp/rrm-bench/synth-large.par4.rep2",
@@ -1258,13 +1374,13 @@
             "edges.dat.part.3.log",
             "vertices.dat.master.log"
           ],
-          "master_wall_s": 2.2514,
-          "master_cpu_s": 2.24,
-          "worker_wall_max_s": 2.3298,
-          "worker_wall_min_s": 2.1137,
-          "worker_cpu_total_s": 8.59,
+          "master_wall_s": 2.3189,
+          "master_cpu_s": 2.31,
+          "worker_wall_max_s": 2.2385,
+          "worker_wall_min_s": 2.0435,
+          "worker_cpu_total_s": 8.44,
           "workers_observed": 4,
-          "driver_overhead_wall_s": 2.3667,
+          "driver_overhead_wall_s": 2.3669,
           "comparison": {
             "vertices": "identical",
             "edges": "identical",
@@ -1280,99 +1396,123 @@
             "/var/tmp/rrm-bench/synth-large.par4.rep3/bundle",
             "/home/user/reproduce_rrm/data/bench/synth_n7_eq10_ts40.g"
           ],
-          "wall_s": 7.1886,
+          "wall_s": 6.964,
           "exit_code": 0,
           "timed_out": false,
-          "cpu_user_s": 11.449,
-          "cpu_sys_s": 2.155,
-          "cpu_total_s": 13.604,
-          "max_single_peak_rss_kb": 624444,
+          "cpu_user_s": 11.288,
+          "cpu_sys_s": 2.257,
+          "cpu_total_s": 13.545,
+          "max_single_peak_rss_kb": 624324,
           "log": "/var/tmp/rrm-bench/synth-large.par4.rep3/harness.log",
-          "samples": 326,
+          "samples": 324,
           "sample_interval_s": 0.02,
           "processes": [
             {
               "role": "other",
-              "wall_s": 7.1747,
-              "cpu_s": 0.02,
-              "peak_rss_kb": 4296
+              "wall_s": 6.942,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 4276
             },
             {
               "role": "master",
-              "wall_s": 2.3115,
-              "cpu_s": 2.3,
-              "peak_rss_kb": 622556
-            },
-            {
-              "role": "other",
-              "wall_s": 0.4043,
-              "cpu_s": 0.4,
-              "peak_rss_kb": 15148
-            },
-            {
-              "role": "worker:0",
-              "wall_s": 2.1235,
-              "cpu_s": 2.12,
-              "peak_rss_kb": 569072
-            },
-            {
-              "role": "worker:1",
-              "wall_s": 2.1451,
-              "cpu_s": 2.14,
-              "peak_rss_kb": 568972
-            },
-            {
-              "role": "worker:2",
-              "wall_s": 2.4491,
-              "cpu_s": 2.29,
-              "peak_rss_kb": 565452
-            },
-            {
-              "role": "worker:3",
-              "wall_s": 2.2315,
-              "cpu_s": 2.22,
-              "peak_rss_kb": 570212
-            },
-            {
-              "role": "other",
-              "wall_s": 0.4516,
-              "cpu_s": 0.46,
-              "peak_rss_kb": 15172
-            },
-            {
-              "role": "other",
-              "wall_s": 0.4156,
-              "cpu_s": 0.43,
-              "peak_rss_kb": 15164
-            },
-            {
-              "role": "other",
-              "wall_s": 0.4333,
-              "cpu_s": 0.43,
-              "peak_rss_kb": 15180
-            },
-            {
-              "role": "other",
-              "wall_s": 0.4205,
-              "cpu_s": 0.42,
-              "peak_rss_kb": 15160
+              "wall_s": 2.2417,
+              "cpu_s": 2.24,
+              "peak_rss_kb": 623372
             },
             {
               "role": "other",
               "wall_s": 0.0,
               "cpu_s": 0.0,
-              "peak_rss_kb": 3528
+              "peak_rss_kb": 2700
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 0
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4053,
+              "cpu_s": 0.42,
+              "peak_rss_kb": 15364
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 2.2507,
+              "cpu_s": 2.23,
+              "peak_rss_kb": 569208
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 2.2293,
+              "cpu_s": 2.23,
+              "peak_rss_kb": 569044
+            },
+            {
+              "role": "worker:2",
+              "wall_s": 2.3796,
+              "cpu_s": 2.22,
+              "peak_rss_kb": 567456
+            },
+            {
+              "role": "worker:3",
+              "wall_s": 2.2293,
+              "cpu_s": 2.21,
+              "peak_rss_kb": 569936
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 2720
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 200
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4166,
+              "cpu_s": 0.42,
+              "peak_rss_kb": 15164
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4273,
+              "cpu_s": 0.42,
+              "peak_rss_kb": 15164
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4053,
+              "cpu_s": 0.41,
+              "peak_rss_kb": 15180
+            },
+            {
+              "role": "other",
+              "wall_s": 0.4287,
+              "cpu_s": 0.42,
+              "peak_rss_kb": 15352
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 3396
             }
           ],
-          "sum_peak_rss_kb": 2979912,
-          "sampled_max_single_peak_rss_kb": 622556,
-          "concurrent_peak_rss_kb": 2230888,
+          "sum_peak_rss_kb": 2988532,
+          "sampled_max_single_peak_rss_kb": 623372,
+          "concurrent_peak_rss_kb": 2254936,
           "concurrent_peak_breakdown_kb": {
-            "other": 4256,
-            "worker:0": 569072,
-            "worker:1": 566460,
-            "worker:2": 532924,
-            "worker:3": 558176
+            "other": 4264,
+            "worker:0": 564132,
+            "worker:1": 566532,
+            "worker:2": 550072,
+            "worker:3": 569936
           },
           "rep": 3,
           "run_dir": "/var/tmp/rrm-bench/synth-large.par4.rep3",
@@ -1395,13 +1535,13 @@
             "edges.dat.part.3.log",
             "vertices.dat.master.log"
           ],
-          "master_wall_s": 2.3115,
-          "master_cpu_s": 2.3,
-          "worker_wall_max_s": 2.4491,
-          "worker_wall_min_s": 2.1235,
-          "worker_cpu_total_s": 8.77,
+          "master_wall_s": 2.2417,
+          "master_cpu_s": 2.24,
+          "worker_wall_max_s": 2.3796,
+          "worker_wall_min_s": 2.2293,
+          "worker_cpu_total_s": 8.89,
           "workers_observed": 4,
-          "driver_overhead_wall_s": 2.428,
+          "driver_overhead_wall_s": 2.3427,
           "comparison": {
             "vertices": "identical",
             "edges": "identical",
@@ -1457,18 +1597,18 @@
         "exit_codes": [
           0
         ],
-        "wall_median_s": 7.1886,
-        "wall_min_s": 6.9479,
-        "wall_max_s": 7.2143,
-        "wall_stdev_s": 0.147,
-        "cpu_total_median_s": 13.604,
-        "max_single_peak_rss_kb": 624516,
-        "sampled_max_single_peak_rss_kb": 624400,
-        "sum_peak_rss_kb": 2988836,
-        "concurrent_peak_rss_kb": 2264504
+        "wall_median_s": 6.964,
+        "wall_min_s": 6.9243,
+        "wall_max_s": 7.5253,
+        "wall_stdev_s": 0.3361,
+        "cpu_total_median_s": 13.545,
+        "max_single_peak_rss_kb": 624456,
+        "sampled_max_single_peak_rss_kb": 624384,
+        "sum_peak_rss_kb": 2988532,
+        "concurrent_peak_rss_kb": 2254936
       }
     }
   },
   "comparison_reference_available": true,
-  "finished": "2026-09-10T12:29:30+0000"
+  "finished": "2026-09-10T12:50:13+0000"
 }

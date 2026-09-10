@@ -95,6 +95,31 @@ assert rep["mem"] and rep["input"]["sha256"], rep
 print("statistics, comparison and process breakdown ok")
 PY
 
+echo "== per-configuration repetition counts =="
+python3 "$BENCH" --label reps --gfile tests/fixtures/small_labels.g \
+    --config fast --config v11 --reps 2 --reps-for v11=1 --mem "$MEM" \
+    --gap "$GAP" --outdir "$OUT/reps" --json "$OUT/reps.json" \
+    --markdown /dev/null >/dev/null
+python3 - "$OUT/reps.json" <<'PY'
+import json, sys
+rep = json.load(open(sys.argv[1]))
+assert rep["configs"]["fast"]["reps_requested"] == 2, rep["configs"]["fast"]
+assert len(rep["configs"]["fast"]["runs"]) == 2, rep["configs"]["fast"]
+assert rep["configs"]["v11"]["reps_requested"] == 1, rep["configs"]["v11"]
+assert len(rep["configs"]["v11"]["runs"]) == 1, rep["configs"]["v11"]
+print("per-configuration reps ok")
+PY
+set +e
+python3 "$BENCH" --label reps --gfile tests/fixtures/small_labels.g \
+    --config fast --reps 1 --reps-for nosuch=2 --mem "$MEM" --gap "$GAP" \
+    --outdir "$OUT/reps" >/dev/null 2>&1
+rc=$?
+set -e
+if [[ "$rc" -eq 0 ]]; then
+    echo "expected --reps-for on an unused configuration to be rejected" >&2
+    exit 1
+fi
+
 echo "== zero-TS input is measurable and reported as such =="
 python3 "$BENCH" --label zero --gfile tests/fixtures/zero_ts.g \
     --config fast --config par:2 --reps 1 --mem "$MEM" --gap "$GAP" \

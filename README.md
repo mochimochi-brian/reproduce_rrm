@@ -215,9 +215,9 @@ replaces `v11`'s `Position(vertices, ...)` linear scan by a hash lookup and
 streams its writes, so what it removes grows with the number of vertices. It
 was never slower in any measured case, but the size of the win depends entirely
 on the input: 1704 vertices (Au5Ag) gave 4.9x end-to-end, 41160 vertices gave
-54x, and an input with only 168 vertices but 341k edges gave 1.3x. On the GAP
+56x, and an input with only 168 vertices but 341k edges gave 1.3x. On the GAP
 computation alone (`Runtime()` around `generate_rrm`, i.e. excluding startup and
-parsing) the same runs are 16x, 93x and 1.2x. Expect a large win for maps with
+parsing) the same runs are 16x, 98x and 1.2x. Expect a large win for maps with
 many vertices, and little for maps whose vertex count is small.
 
 **`GAP_WORKERS=k>1` is not a general speedup.** The driver starts one master
@@ -235,7 +235,7 @@ build, the extra startups and the publication step. In the measurements:
 | input | vertices | edges | fastest sequential | `par:2` | `par:4` |
 |---|---|---|---|---|---|
 | Au5Ag | 1704 | 10020 | 1.34 s | 2.59 s | 2.72 s |
-| synthetic, realistic shape | 41160 | 147000 | 2.94 s | 6.37 s | 7.19 s |
+| synthetic, realistic shape | 41160 | 147000 | 2.79 s | 6.21 s | 6.96 s |
 | synthetic, edge-dominated | 168 | 341292 | 4.97 s | 4.58 s | 3.72 s |
 
 `par:4` beat the sequential script only in the edge-dominated case, and then by

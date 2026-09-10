@@ -61,13 +61,13 @@ bench synth-medium data/bench/synth_n6_eq8_ts30.g --mem "$MEM" --reps "$REPS" \
     --config v11 --config fast --config par:1 --config par:2 --config par:4 \
     --deep-compare
 
-# 3. Larger synthetic input: 41k vertices, 147k edges. v11 is quadratic in the
-#    vertex count, so it runs once under a time limit; the fast and parallel
-#    configurations are repeated as usual. v11 stays the reference so that the
-#    byte comparison is made at this size if it finishes within the limit.
+# 3. Larger synthetic input: 41k vertices, 147k edges. v11 costs about 160 s a
+#    run here, so it is given a time limit but still repeated like everything
+#    else. On an input where v11 is too slow to repeat, add --reps-for v11=1:
+#    a cut-off run is then reported as a limit and left out of the ratios.
 bench synth-large data/bench/synth_n7_eq10_ts40.g --mem "$MEM" --reps "$REPS" \
     --config v11 --config fast --config par:1 --config par:2 --config par:4 \
-    --reps-for v11=1 --timeout "$V11_TIMEOUT" --deep-compare
+    --timeout "$V11_TIMEOUT" --deep-compare
 
 # 4. Edge-dominated input: few vertices, 341k edges. This is where splitting
 #    the TS loop across processes can actually pay for the extra GAP startups.
