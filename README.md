@@ -107,6 +107,13 @@ ignores labels and compares vertex ids, clusters and endpoints, which is how a
 `vlabel=false`/`elabel=false` run is checked against the labeled run that
 carries the meaning of those ids.
 
+In normalized mode, the default `--key auto` requires labels on every vertex
+if either input contains any vertex labels. It uses ids only when both inputs
+have no vertex labels. Mixed labeled/unlabeled vertices are rejected with exit
+status 2; use `--mode structure` for an intentional labels-on/labels-off
+comparison. Duplicate vertex ids are rejected with exit status 2 in every mode,
+including when the edge files are empty.
+
 **Verification.** `tests/test_rrm_full_comparison.sh` runs the comparison over
 Au5Ag, AuCu4 in continue mode, and small fixtures in `tests/fixtures/` covering
 self-loops, parallel edges, inversion isomers, a TS between vertices of the same

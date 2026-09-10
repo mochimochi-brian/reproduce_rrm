@@ -129,3 +129,44 @@ checks.
 * **Physical validity.** Nothing here checks whether a GRRM input describes a
   sensible reaction network. Byte equality is equality with the reference
   implementation.
+
+## PR #21 review corrections
+
+The review of `5dad009` reproduced two false matches in the normalized
+comparison: removing one vertex label selected id keys for both inputs, and
+replacing vertex id 2 with 1 in the zero-TS output silently overwrote the id
+mapping. Both returned exit status 0.
+
+Automatic key selection now requires every vertex to be labeled if any vertex
+label is present in either input. Id keys are selected automatically only when
+both inputs have no vertex labels. The vertex parser also rejects duplicate
+ids in every comparison mode, including for an empty edge file. These invalid
+inputs return exit status 2.
+
+Regression tests cover partial and complete label loss on either side, the
+same invalid input on both sides, duplicate ids with empty edges in all three
+modes, and successful automatic comparison of two unlabeled inputs. The new
+tests failed before the fix; all 19 unit tests pass after it.
+
+Validation commands on qc4 (GAP 4.13.0, Python 3.11.3, `MEM=2g`):
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 tests/test_compare_rrm_dat.py
+GAP=/home5/Brian/bin/gap-4.13.0/gap MEM=2g \
+  OUT=/tmp/rrm-pr21-fix-full-20260910 bash tests/test_rrm_full_comparison.sh
+bash -n tests/test_rrm_full_comparison.sh
+git diff --check
+```
+
+All four commands passed. The full comparison retained byte equality for the
+fixtures, Au5Ag, and AuCu4 continue mode, and confirmed nonzero exit with no
+publication for the default AuCu4 policy. The separate legacy fast, parallel,
+Pechukas and degree-check suites were not rerun for these comparator-only
+corrections; their original results are recorded above.
+
+Corrected files verified in this run:
+
+```text
+c221aa0fbbdc39ebed42063b40b4fa292d710c859d1ea4e294a0f7f074e4ca14  tests/compare_rrm_dat.py
+877b3c3f269b502763afb82da363eeab47e599161f238b0ea9d489e003a8abbe  tests/test_compare_rrm_dat.py
+```

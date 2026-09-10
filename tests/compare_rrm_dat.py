@@ -17,6 +17,8 @@ Modes
               permutation) instead of by id, and edges by (TS label,
               permutation, endpoint pair).  Self-loops stay self-loops and
               multiplicities are compared as multiplicities.
+              Automatic keys require labels on every vertex if any are present;
+              ids are used only when both inputs have no vertex labels.
 
 Exit status: 0 identical, 1 different, 2 usage or parse error.
 """
@@ -75,7 +77,11 @@ def parse_vertices(path):
             raise ParseError('{}:{}: cannot parse vertex line: {}'.format(path, lineno, line))
     if not out:
         raise ParseError('{}: no vertices'.format(path))
+    seen_ids = set()
     for vertex in out:
+        if vertex['vid'] in seen_ids:
+            raise ParseError('{}: duplicate vertex id {}'.format(path, vertex['vid']))
+        seen_ids.add(vertex['vid'])
         if vertex['cluster'] is None:
             raise ParseError('{}: vertex {} is outside every cluster'.format(path, vertex['vid']))
     return out
@@ -124,7 +130,7 @@ def compare_ordered(av, ae, bv, be, fields_v, fields_e):
 
 
 def _vertex_keys(vertices, key_mode, side):
-    """-> (vid -> key, key -> vid).  Duplicate keys are a difference, not a crash."""
+    """-> (vid -> key, key -> vid). Duplicate semantic keys are parse errors."""
     by_vid = {}
     by_key = {}
     for vertex in vertices:
@@ -196,8 +202,8 @@ def main(argv=None):
                         default='exact')
     parser.add_argument('--key', choices=('auto', 'label', 'id'), default='auto',
                         help='normalized vertex identity: semantic label, or output id '
-                             'for label-free runs (auto picks label when both sides '
-                             'carry vertex labels)')
+                             'for label-free runs (auto requires all vertex labels '
+                             'if any are present; otherwise it uses ids)')
     args = parser.parse_args(argv)
 
     try:
@@ -218,7 +224,7 @@ def main(argv=None):
         else:
             key_mode = args.key
             if key_mode == 'auto':
-                labeled = all(v['eq'] is not None for v in av + bv)
+                labeled = any(v['eq'] is not None for v in av + bv)
                 key_mode = 'label' if labeled else 'id'
             diffs = compare_normalized(av, ae, bv, be, key_mode)
     except ParseError as err:

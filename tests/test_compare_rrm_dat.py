@@ -200,6 +200,7 @@ class CompareTests(unittest.TestCase):
         self.assertDiffers(a, b, 'exact')
         # Without labels there is no semantic key; the id contract is compared.
         self.assertSame(b, b, 'normalized', key='id')
+        self.assertSame(b, b, 'normalized')
         got = self.compare(a, b, 'normalized', key='label')
         self.assertEqual(got.returncode, 2, got.stdout + got.stderr)
         self.assertIn('needs vertex labels', got.stderr)
@@ -215,6 +216,40 @@ class CompareTests(unittest.TestCase):
         self.assertDiffers(a, b, 'normalized', key='id')
 
     # --- malformed input --------------------------------------------------
+    def test_missing_vertex_label_is_rejected_by_auto_key(self):
+        a = self.pair('a')
+        b = self.pair('b', vertices=ONE_EQ_VERTICES.replace('1[label="0 ()"]', '1'))
+        for left, right in ((a, b), (b, a), (b, b)):
+            with self.subTest(left=left.v, right=right.v):
+                got = self.compare(left, right, 'normalized')
+                self.assertEqual(got.returncode, 2, got.stdout + got.stderr)
+                self.assertIn('needs vertex labels', got.stderr)
+
+    def test_labeled_and_bare_vertices_are_rejected_by_auto_key(self):
+        bare_vertices = (
+            'subgraph cluster_0 { label="0";\nfontsize="30pt"\n'
+            + ''.join('{}\n'.format(i + 1) for i in range(len(PERMS)))
+            + '}\n'
+        )
+        a = self.pair('a')
+        b = self.pair('b', vertices=bare_vertices)
+        for left, right in ((a, b), (b, a)):
+            with self.subTest(left=left.v):
+                got = self.compare(left, right, 'normalized')
+                self.assertEqual(got.returncode, 2, got.stdout + got.stderr)
+                self.assertIn('needs vertex labels', got.stderr)
+
+    def test_duplicate_vertex_ids_are_rejected_with_empty_edges(self):
+        a = self.pair('a', edges='')
+        b = self.pair('b', vertices=ONE_EQ_VERTICES.replace('2[label=', '1[label='),
+                      edges='')
+        for mode in ('exact', 'structure', 'normalized'):
+            for left, right in ((a, b), (b, a), (b, b)):
+                with self.subTest(mode=mode, left=left.v, right=right.v):
+                    got = self.compare(left, right, mode)
+                    self.assertEqual(got.returncode, 2, got.stdout + got.stderr)
+                    self.assertIn('duplicate vertex id 1', got.stderr)
+
     def test_unparsable_line_exits_two(self):
         a = self.pair('a')
         b = self.pair('b', edges='1==2\n')
