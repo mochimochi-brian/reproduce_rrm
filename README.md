@@ -56,14 +56,66 @@ The intended product of the GAP step is the labeled files `vertices_*.dat` and `
 
 ## Advanced Usage
 1. Run the Python preprocessing: python3 rrm_reconstruction_v18.py <EQ_list.log> <TS_list.log> <TS_file_prefix> <output.g> – this generates a GAP script with symmetry information (stored as <output.g>).
-2. Run GAP on the generated script to compute the RRM graph data: `gap -b -q -m 12g generate_rrm_v11_fast.g` (or `generate_rrm_v11.g`; use the appropriate memory flag). This will produce vertices_*.dat and edges_*.dat files. For larger maps you can instead run `GAP_WORKERS=k ./generate_rrm_v11_parallel.sh vertices.dat edges.dat data/MOL_AFIR.g` (default `k=1` is the same sequential `generate_rrm` call; `k>1` splits TS edge writes across processes). The demo script still runs a single GAP process. After GAP, `python3 check_number_of_edges_dat.py vertices.dat edges.dat` checks that vertices with the same EQ number have the same degree; it does not need a DOT file.
+2. Run GAP on the generated script to compute the RRM graph data: `gap -b -q -m 12g generate_rrm_v11_fast.g` (or `generate_rrm_v11.g`; use the appropriate memory flag). This will produce vertices_*.dat and edges_*.dat files. For larger maps you can instead run `GAP_WORKERS=2 ./generate_rrm_v11_parallel.sh --bundle output/MOL data/MOL_AFIR.g` (`k>1` splits TS edge writes across processes; see [Parallel output bundles](#parallel-output-bundles) for reading the result). The demo script still runs a single GAP process. After GAP, `python3 check_number_of_edges_dat.py vertices.dat edges.dat` checks that vertices with the same EQ number have the same degree; it does not need a DOT file.
 3. Combine the output into a Graphviz file and render it: The demo script automates this using cat and calling `dot`. If doing manually, you would take the contents of the .dat files and format them into a DOT file (see the script for the exact steps) and then run Graphviz’s `dot -Tpng` to get an image. Skip this step when the labeled graph is large; `dot` is optional and will fail or take prohibitive time well before GAP itself does. The demo still runs `check_number_of_edges_v3.py` on the DOT file.
 
 ## Options
 * `vlabel = true or false`, if it is set to true, the vertex labels are included in the file `rrm_Au5Ag_AFIR.dot`. Each vertex label comprises the corresponding EQ number n (EQn in the input file \*EQ_list.log) or n\* if it is an inversion isomer of EQn, and the permutation from the reference structure (EQn or EQn*). 
 * `elabel = true or false`, if it is set to true, the edge labels are included in the file `rrm_Au5Ag_AFIR.dot`. Each edge label comprises the corresponding TS number n (TSn in the input file \*TS_list.log) or n\* if it is an inversion isomer of TSn, and the permutation from the reference structures (TSn or TSn*).
 * `RRM_CONTINUE_ON_PECHUKAS`: `generate_rrm_v11_fast.g` stops with a non-zero GAP exit and does not write dat files if a path violates Pechukas's theorem. Set the environment variable `RRM_CONTINUE_ON_PECHUKAS=1`, or in GAP `RRM_CONTINUE_ON_PECHUKAS:=true;;` before `generate_rrm`, to restore the v11 print-and-continue behavior (needed for the AuCu4 demonstration below).
-* `GAP_WORKERS`: used by `generate_rrm_v11_parallel.sh`. Default `1` runs sequential `generate_rrm` (byte-identical to invoking GAP on `generate_rrm_v11_fast.g` directly) and writes `VFILE`/`EFILE` in that GAP process. For `k>1`, the master writes vertices to a staging file and runs the Pechukas checks; each worker writes an edge shard for a contiguous TS-index slice; shards are concatenated in TS-index order. Vertices and edges are published together only after every shard succeeds; a failed or interrupted `k>1` run leaves the previous `vertices`/`edges` files in place. Each `k>1` start deletes leftover numeric `edges.dat.part.N` shards (so `RRM_KEEP_SHARDS=1` shards from an earlier run are discarded when a new run begins). After a successful run those shards are deleted unless `RRM_KEEP_SHARDS=1` (or `true`), which keeps only the current split. Any other non-empty `RRM_KEEP_SHARDS` value is an error. Worker `.log` files and `${VFILE}.master.log` are always kept. Workers print `RRM_NVERT`; the driver aborts if a worker's count differs from the master's. `MEM` (default `12g`) is per GAP process, so `k` workers plus the master request about `(k+1)` times that memory.
+* `GAP_WORKERS`: default `1` runs sequential `generate_rrm` with the existing `VFILE EFILE GFILE` arguments and writes those files directly. `k>1` requires `--bundle OUTPUT_DIR GFILE`. The master writes vertices and checks Pechukas; workers write contiguous TS slices, concatenated in TS-index order. `MEM` (default `12g`) is per GAP process. Each worker's `RRM_NVERT` must match the master's before publication.
+* `RRM_KEEP_SHARDS`: parallel bundles delete numeric edge shards before publication by default. `1`, `true`, or `TRUE` retains the current run's shards; other non-empty values are errors. Master and worker logs are retained in each run directory. Runs do not remove another generation's shards.
+
+## Parallel output bundles
+
+For `GAP_WORKERS>1`, results are stored as a pair in a unique generation directory:
+
+```text
+output/MOL/
+  .writer.lock
+  current -> runs/run.XXXXXXXX
+  runs/run.XXXXXXXX/
+    vertices.dat
+    edges.dat
+    manifest.txt
+    vertices.dat.master.log
+    edges.dat.part.0.log
+    ...
+```
+
+`manifest.txt` records the format version, vertex count, TS count, active worker count, and SHA-256 hashes of both files. It records the checks performed by this driver; it does not certify physical validity or full master/worker vertex correspondence (tracked in Issue #16).
+
+Run and read a result as follows. Resolve `current` **once**, then use that generation path for both files:
+
+```bash
+GAP_WORKERS=2 ./generate_rrm_v11_parallel.sh --bundle output/Au5Ag data/Au5Ag_AFIR.g
+run=$(readlink -f -- output/Au5Ag/current)
+test -n "$run" && test -f "$run/manifest.txt" || exit 1
+python3 check_number_of_edges_dat.py "$run/vertices.dat" "$run/edges.dat"
+(cd "$run" && tail -n 2 manifest.txt | sha256sum -c -)
+```
+
+Do not open `current/vertices.dat` and `current/edges.dat` separately: a publication between those opens could select different generations. Once resolved, the generation remains available across subsequent runs. Published generations are immutable to the driver and retained indefinitely. Reclaim disk space only when no readers or writers use the bundle; preserve the directory selected by `current` and any snapshots still needed. Failed runs can leave unpublished generation directories containing diagnostics, shards, or a completed pair; directory presence or a manifest alone is not a publication marker. Only `current` selects the latest published result.
+
+The driver prepares both files and the manifest before switching the single `current` symlink with a same-filesystem rename. Any failure before that switch leaves the old reference and pair intact; a failed first run has no `current`. Errors and INT/TERM return nonzero. If interruption occurs after the switch, the complete new generation may already be published; cleanup never deletes it or older generations. This is an atomic visibility guarantee for the supported reader procedure, not a power-loss durability guarantee. No `fsync` protocol is implemented.
+
+Supported environments are Linux with Bash, GNU coreutils (`mv -T`, `readlink -f`, `stat`, `sha256sum`, `mktemp`) and util-linux `flock`, on a filesystem providing atomic same-filesystem rename and functioning advisory locks. Keep `runs` as an ordinary directory on the bundle filesystem. Network/distributed filesystems require verification of those semantics; they are not covered by the local tests. Writers to the same bundle fail immediately if its lock is held. Do not externally modify a bundle while it is in use.
+
+### Migration from VFILE/EFILE
+
+The old parallel invocation `GAP_WORKERS=2 ... VFILE EFILE GFILE` now fails with a migration message before changing those files. Replace it with `--bundle OUTPUT_DIR GFILE` and update readers as above. Existing standalone files are left in place. To export a resolved generation for tools requiring standalone paths, copy it to a fresh directory while those tools are stopped:
+
+```bash
+set -e
+run=$(readlink -f -- output/Au5Ag/current)
+test -n "$run" && test -f "$run/manifest.txt" || exit 1
+mkdir exported-Au5Ag
+cp -- "$run/vertices.dat" exported-Au5Ag/vertices_Au5Ag_AFIR.dat
+cp -- "$run/edges.dat" exported-Au5Ag/edges_Au5Ag_AFIR.dat
+# Start the consuming tool only after both copies succeed.
+```
+
+These two copies are not atomic publication. For concurrent readers, use the bundle procedure. `GAP_WORKERS=1` retains the original direct-file interface and does not provide the bundle's pair publication guarantee.
 
 ## Scale of the labeled map
 The number of labeled vertices is on the order of (number of EQs) times |CNPI| / |point group of the EQ|. For a monometallic cluster the CNPI group contains S_n (and S_n x Z_2 when inversion copies are distinct), so the files grow as n!. Mixed-element maps are much cheaper: they use a Young subgroup of S_n. The bundled Au5Ag example has six atoms but only five identical gold atoms, and the labeled files are small (~1.7e3 vertices, ~1.0e4 edges, a few hundred kB).
