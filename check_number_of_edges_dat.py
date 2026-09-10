@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Stream vertices_*.dat / edges_*.dat and check EQ-number degree consistency."""
+"""Stream vertices_*.dat / edges_*.dat and check EQ-number degree consistency.
+
+This is a necessary condition, not a correctness check. Every vertex carrying
+the same EQ number must have the same degree; graphs that satisfy that and are
+still wrong pass here. K3,3 and the triangular prism (six vertices, nine edges,
+degree three) both pass when all vertices share an EQ, and so does a file with
+no edges at all. Use tests/compare_rrm_dat.py against a reference run to compare
+labeled graphs, and see the README section "Equivalence with the reference
+implementation".
+"""
 import re
 import sys
 from collections import defaultdict

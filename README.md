@@ -50,14 +50,71 @@ it indicates that the resulting RRM in shape space has `n` connected components 
 * Optional driver `generate_rrm_v11_parallel.sh` for process-parallel edge writes (`GAP_WORKERS`, default 1). It calls entry points in `generate_rrm_v11_fast.g`; there is no second GAP algorithm file.
 * Helper Python script for validation `check_number_of_edges_v3.py` (DOT; used by the demo)
 * Streaming helper `check_number_of_edges_dat.py` for `vertices_*.dat` / `edges_*.dat` (same EQ-number degree check; use this for n=8+ maps that skip Graphviz)
-* Shell script to tie it all together `reproduce_rrm_demo.sh`
+* Shell script to tie it all together `reproduce_rrm_demo.sh`. It calls the original `generate_rrm_v11.g`, not the faster script or the parallel driver.
+* Tests under `tests/`, including `tests/test_rrm_full_comparison.sh` (labeled-graph comparison of all three producers) and `tests/compare_rrm_dat.py` (the comparison itself)
 
 The intended product of the GAP step is the labeled files `vertices_*.dat` and `edges_*.dat`: each vertex is an EQ (or its inversion isomer) plus a CNPI permutation, and each edge is a TS plus a permutation. The Graphviz DOT/PNG is a convenience for small maps, not the reconstruction itself. See [Scale of the labeled map](#scale-of-the-labeled-map) for when those dat files stop being a practical artifact.
 
 ## Advanced Usage
 1. Run the Python preprocessing: python3 rrm_reconstruction_v18.py <EQ_list.log> <TS_list.log> <TS_file_prefix> <output.g> – this generates a GAP script with symmetry information (stored as <output.g>).
-2. Run GAP on the generated script to compute the RRM graph data: `gap -b -q -m 12g generate_rrm_v11_fast.g` (or `generate_rrm_v11.g`; use the appropriate memory flag). This will produce vertices_*.dat and edges_*.dat files. For larger maps you can instead run `GAP_WORKERS=2 ./generate_rrm_v11_parallel.sh --bundle output/MOL data/MOL_AFIR.g` (`k>1` splits TS edge writes across processes; see [Parallel output bundles](#parallel-output-bundles) for reading the result). The demo script still runs a single GAP process. After GAP, `python3 check_number_of_edges_dat.py vertices.dat edges.dat` checks that vertices with the same EQ number have the same degree; it does not need a DOT file.
+2. Run GAP on the generated script to compute the RRM graph data: `gap -b -q -m 12g generate_rrm_v11_fast.g` (or `generate_rrm_v11.g`; use the appropriate memory flag). This will produce vertices_*.dat and edges_*.dat files. For larger maps you can instead run `GAP_WORKERS=2 ./generate_rrm_v11_parallel.sh --bundle output/MOL data/MOL_AFIR.g` (`k>1` splits TS edge writes across processes; see [Parallel output bundles](#parallel-output-bundles) for reading the result). The demo script still runs a single GAP process. After GAP, `python3 check_number_of_edges_dat.py vertices.dat edges.dat` checks that vertices with the same EQ number have the same degree; it does not need a DOT file. That check is a necessary condition only — see [Equivalence with the reference implementation](#equivalence-with-the-reference-implementation).
 3. Combine the output into a Graphviz file and render it: The demo script automates this using cat and calling `dot`. If doing manually, you would take the contents of the .dat files and format them into a DOT file (see the script for the exact steps) and then run Graphviz’s `dot -Tpng` to get an image. Skip this step when the labeled graph is large; `dot` is optional and will fail or take prohibitive time well before GAP itself does. The demo still runs `check_number_of_edges_v3.py` on the DOT file.
+
+## Equivalence with the reference implementation
+
+`generate_rrm_v11.g` is the reference. `generate_rrm_v11_fast.g` and
+`generate_rrm_v11_parallel.sh` are expected to reproduce it, and there is no
+second algorithm: the driver calls entry points in `generate_rrm_v11_fast.g`.
+
+**What is claimed.** For an input that violates no Pechukas condition, all three
+produce byte-identical `vertices_*.dat` and `edges_*.dat`. The enumeration order
+is part of that contract, so `cmp` is the comparison; shards are concatenated in
+TS-index order. This holds for every `vlabel`/`elabel` combination and for any
+`GAP_WORKERS`, including worker counts above the TS count and a zero-TS input.
+
+**What is not claimed.**
+
+* **Pechukas violations.** The behaviour differs by design: `generate_rrm_v11.g`
+  prints and continues, `generate_rrm_v11_fast.g` exits non-zero and writes no
+  dat files, and the driver publishes nothing. With
+  `RRM_CONTINUE_ON_PECHUKAS=1` the fast and parallel outputs match `v11` byte
+  for byte again; the bundled AuCu4 sample is the worked example.
+* **A failed vertex lookup.** `generate_rrm_v11.g` writes the string `fail` into
+  the dat file and still exits 0; `generate_rrm_v11_fast.g` exits non-zero.
+* **Physical validity.** Byte equality says the reconstruction reproduces the
+  reference, not that the GRRM input describes a physically sensible network.
+  A Pechukas violation is exactly such an input problem, and it is reported
+  rather than repaired.
+
+**The degree check is not a correctness check.**
+`check_number_of_edges_dat.py` verifies a necessary condition: vertices carrying
+the same EQ number must have the same degree. Different graphs satisfy it. With
+every vertex in one EQ, K3,3 and the triangular prism (six vertices, nine edges,
+degree three) both pass, as does a file with no edges. An empty edge file is
+legitimate for an input with no transition states; it is not evidence that a map
+is right. To compare labeled graphs, run `tests/compare_rrm_dat.py` against a
+reference run:
+
+```bash
+python3 tests/compare_rrm_dat.py ref_v.dat ref_e.dat new_v.dat new_e.dat --mode normalized
+```
+
+`--mode exact` compares every field in file order and `cmp` is the contract that
+matches it. `--mode normalized` drops the order requirement and identifies
+vertices by (EQ label, permutation) and edges by (TS label, permutation,
+endpoint pair), keeping self-loops and multiplicities. `--mode structure`
+ignores labels and compares vertex ids, clusters and endpoints, which is how a
+`vlabel=false`/`elabel=false` run is checked against the labeled run that
+carries the meaning of those ids.
+
+**Verification.** `tests/test_rrm_full_comparison.sh` runs the comparison over
+Au5Ag, AuCu4 in continue mode, and small fixtures in `tests/fixtures/` covering
+self-loops, parallel edges, inversion isomers, a TS between vertices of the same
+EQ, several EQs and a zero-TS input. It also mutates real output — a
+degree-preserving rewiring, a changed TS or permutation label, a dropped edge, a
+changed multiplicity, an opened self-loop — and requires the comparison to
+reject each one while the degree check still passes on the first three. See
+[docs/results/issue17-full-comparison.md](docs/results/issue17-full-comparison.md).
 
 ## Options
 * `vlabel = true or false`, if it is set to true, the vertex labels are included in the file `rrm_Au5Ag_AFIR.dot`. Each vertex label comprises the corresponding EQ number n (EQn in the input file \*EQ_list.log) or n\* if it is an inversion isomer of EQn, and the permutation from the reference structure (EQn or EQn*). 
