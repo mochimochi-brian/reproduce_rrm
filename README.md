@@ -51,7 +51,8 @@ it indicates that the resulting RRM in shape space has `n` connected components 
 * Helper Python script for validation `check_number_of_edges_v3.py` (DOT; used by the demo)
 * Streaming helper `check_number_of_edges_dat.py` for `vertices_*.dat` / `edges_*.dat` (same EQ-number degree check; use this for n=8+ maps that skip Graphviz)
 * Shell script to tie it all together `reproduce_rrm_demo.sh`. It calls the original `generate_rrm_v11.g`, not the faster script or the parallel driver.
-* Tests under `tests/`, including `tests/test_rrm_full_comparison.sh` (labeled-graph comparison of all three producers) and `tests/compare_rrm_dat.py` (the comparison itself)
+* Tests under `tests/`, including `tests/test_rrm_full_comparison.sh` (labeled-graph comparison of all three producers), `tests/compare_rrm_dat.py` (the comparison itself) and `tests/test_rrm_bench.sh` (the measurement tools below)
+* Measurement tools under `tools/`: `tools/rrm_bench.py` (wall time, GAP CPU time and the three peak-memory figures for `v11` / `fast` / `par:k`, with a byte comparison of the produced maps), `tools/rrm_input_stats.g` (vertex, edge and per-TS expansion counts of an input), `tools/make_synthetic_input.py` (reproducible synthetic inputs, `data/bench/*.g`) and `tools/bench_campaign.sh` (the campaign behind [docs/results/issue18-performance.md](docs/results/issue18-performance.md)). None of them is needed to produce a map; see [Cost of the GAP step](#cost-of-the-gap-step-and-when-gap_workers-pays)
 
 The intended product of the GAP step is the labeled files `vertices_*.dat` and `edges_*.dat`: each vertex is an EQ (or its inversion isomer) plus a CNPI permutation, and each edge is a TS plus a permutation. The Graphviz DOT/PNG is a convenience for small maps, not the reconstruction itself. See [Scale of the labeled map](#scale-of-the-labeled-map) for when those dat files stop being a practical artifact.
 
@@ -198,6 +199,101 @@ The table is an order of magnitude for **monometallic** maps with a GRRM catalog
 That Au7 expansion is about 3 MB of vertices and 26 MB of edges; the rendered PNG is hundreds of MB. Skip Graphviz `dot` for maps in that range and above. For maps that still fit on disk, increase the memory available to GAP with `-m` (the examples use `-m 12g`). Details: [GAP documentation](https://www.gap-system.org/). The paper (see [How to Cite](#how-to-cite)) describes the reconstruction; this table is only about file size.
 
 The demo helper `check_number_of_edges_v3.py` reads the whole DOT file into memory. For n=8+ maps, skip `dot` and run `python3 check_number_of_edges_dat.py vertices_*.dat edges_*.dat` instead: it streams the labeled files and keeps only an O(number of vertices) degree table. The check is not required for writing the dat files.
+
+## Cost of the GAP step, and when `GAP_WORKERS` pays
+
+Measured numbers, the method behind them and their limits are in
+[docs/results/issue18-performance.md](docs/results/issue18-performance.md);
+reproduce them with `tools/bench_campaign.sh`, or measure your own input with
+`tools/rrm_bench.py` (see [Measuring your own input](#measuring-your-own-input)).
+The figures quoted here are medians of three runs on a 4-core container with
+GAP 4.12.1 and `MEM=2g`, not on a cluster. **Re-measure before relying on
+them.**
+
+**`generate_rrm_v11_fast.g` versus `generate_rrm_v11.g`.** The fast script
+replaces `v11`'s `Position(vertices, ...)` linear scan by a hash lookup and
+streams its writes, so what it removes grows with the number of vertices. It
+was never slower in any measured case, but the size of the win depends entirely
+on the input: 1704 vertices (Au5Ag) gave 4.9x end-to-end, 41160 vertices gave
+56x, and an input with only 168 vertices but 341k edges gave 1.3x. On the GAP
+computation alone (`Runtime()` around `generate_rrm`, i.e. excluding startup and
+parsing) the same runs are 16x, 98x and 1.2x. Expect a large win for maps with
+many vertices, and little for maps whose vertex count is small.
+
+**`GAP_WORKERS=k>1` is not a general speedup.** The driver starts one master
+GAP process (vertex enumeration, Pechukas check, vertex file, vertex map) and
+*k* worker processes, and every one of them independently pays GAP startup and
+rebuilds the full coset transversal and index before writing its TS slice. Only
+the edge writes are divided. So, roughly,
+
+* sequential: startup + index build + vertices + **all** edges
+* `k` workers: startup + (index build + vertices + map) + (index build + edges/`k`) + concatenation and validation
+
+and `k>1` wins only when the edge work is large enough to pay for the repeated
+build, the extra startups and the publication step. In the measurements:
+
+| input | vertices | edges | fastest sequential | `par:2` | `par:4` |
+|---|---|---|---|---|---|
+| Au5Ag | 1704 | 10020 | 1.34 s | 2.59 s | 2.72 s |
+| synthetic, realistic shape | 41160 | 147000 | 2.79 s | 6.21 s | 6.96 s |
+| synthetic, edge-dominated | 168 | 341292 | 4.97 s | 4.58 s | 3.72 s |
+
+`par:4` beat the sequential script only in the edge-dominated case, and then by
+1.3x on four workers. For every map in this repository's own sample data,
+`gap -b -q -r -m <MEM> generate_rrm_v11_fast.g` sequentially is the faster
+choice. Reach for `GAP_WORKERS>1` when the edge count dwarfs the vertex count,
+or when a single process would not finish in the time available — and measure
+your input rather than assuming, because `--bundle` also buys the atomic
+publication guarantee described above, which `GAP_WORKERS=1` does not provide.
+
+**`MEM` is per process, and it is not free.** `MEM` is GAP's `-m`, the initial
+workspace of *each* GAP process, so a `GAP_WORKERS=k` run holds `k+1` of them
+at once. On Au5Ag, raising `MEM` from `512m` to `12g` slowed the sequential run
+from 1.17 s to 3.02 s and `par:4` from 2.47 s to 9.98 s, and it raised the
+memory the whole job needs at one time from 985 MiB to 6.6 GiB — for a map
+whose files are a few hundred kB. Use the smallest `-m` that completes; raise it
+only when GAP actually runs out (see [Scale of the labeled
+map](#scale-of-the-labeled-map)).
+
+**Which memory number to compare against a job limit.** Three different figures
+are easy to confuse, and only one of them sizes a parallel job: the peak of a
+single process, the sum of the per-process peaks (which over-counts, since the
+peaks are not simultaneous), and the largest total of *simultaneously* resident
+memory. For `par:4` on Au5Ag at `MEM=2g` these were 473 MiB, 2313 MiB and
+1747 MiB respectively. A batch-system memory limit has to cover the third one;
+`tools/rrm_bench.py` reports all three separately and never mixes them.
+
+### Measuring your own input
+
+```bash
+python3 rrm_reconstruction_v18.py Metal/MOL/MOL_AFIR_EQ_list.log \
+    Metal/MOL/MOL_AFIR_TS_list.log Metal/MOL/MOL_AFIR_TS data/MOL_AFIR.g
+python3 tools/rrm_bench.py --label MOL --gfile data/MOL_AFIR.g \
+    --config v11 --config fast --config par:2 --config par:4 \
+    --reps 3 --mem 2g --outdir /var/tmp/rrm-bench --deep-compare \
+    --json /var/tmp/rrm-bench/MOL.json --markdown -
+```
+
+Every configuration's map is compared byte for byte against the first one
+listed, so a run that both times a change and disagrees with the reference
+fails (exit 2) instead of reporting a speedup. `--timeout SECONDS` bounds a run
+that is too slow to wait for; a cut-off run is reported as such and is left out
+of the ratios. Raw output goes under `--outdir`, which must be outside the
+repository. The structural size of an input alone, without producing anything:
+
+```bash
+gap -b -q -r -m 2g <<'EOF'
+Read("tools/rrm_input_stats.g");
+Read("data/MOL_AFIR.g");
+rrm_input_stats(symc, ur, urt, ss);
+QUIT;
+EOF
+```
+
+This prints the vertex count, the edge count and the per-TS expansion
+`Index(sym, urt[i])` — the last of which is what a `GAP_WORKERS>1` run splits by
+TS *count*, so a map with a few very heavy transition states will not balance
+across workers.
 
 ## Limitations
 * Sample data of GRRM output is in the directory Metal. The files required are `***EQ_list.log`, `***TS_list.log`, and `***TSn.log` (`n` is the indices of the transition states.).

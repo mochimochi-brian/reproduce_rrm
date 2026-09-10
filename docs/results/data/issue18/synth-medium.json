@@ -1,0 +1,1554 @@
+{
+  "label": "synth-medium",
+  "reference": "v11",
+  "order": [
+    "v11",
+    "fast",
+    "par:1",
+    "par:2",
+    "par:4"
+  ],
+  "reps": 3,
+  "mem": "2g",
+  "timeout": 0,
+  "started": "2026-09-10T12:25:09+0000",
+  "outdir": "/var/tmp/rrm-bench",
+  "input": {
+    "path": "data/bench/synth_n6_eq8_ts30.g",
+    "sha256": "6c1a40b4c992b2e527bdc7aba753de7e8ca57ea170fdb65b8c04480e0114a632",
+    "bytes": 2973,
+    "stats": {
+      "raw": "RRM_STAT_SYM_ORDER=720\nRRM_STAT_DEGREE=7\nRRM_STAT_NEQ=8\nRRM_STAT_NTS=30\nRRM_STAT_NVERT=4440\nRRM_STAT_EQ_VERTS=120,720,720,360,720,720,720,360\nRRM_STAT_NEDGE=15600\nRRM_STAT_TS_EDGES=720,720,120,720,720,120,720,720,120,720,720,120,720,720,120,720,720,120,720,720,120,720,720,120,720,720,120,720,720,120",
+      "sym_order": 720,
+      "degree": 7,
+      "neq": 8,
+      "nts": 30,
+      "nvert": 4440,
+      "eq_verts": [
+        120,
+        720,
+        720,
+        360,
+        720,
+        720,
+        720,
+        360
+      ],
+      "nedge": 15600,
+      "ts_edges": [
+        720,
+        720,
+        120,
+        720,
+        720,
+        120,
+        720,
+        720,
+        120,
+        720,
+        720,
+        120,
+        720,
+        720,
+        120,
+        720,
+        720,
+        120,
+        720,
+        720,
+        120,
+        720,
+        720,
+        120,
+        720,
+        720,
+        120,
+        720,
+        720,
+        120
+      ]
+    }
+  },
+  "environment": {
+    "gap": "gap",
+    "gap_version": "4.12.1",
+    "uname": "Linux vm 6.18.44-fc-v24 #1 SMP PREEMPT_DYNAMIC @0 x86_64 x86_64",
+    "cpu_model": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+    "cpus": 4,
+    "mem_total_kb": 16461028,
+    "python": "3.11.15",
+    "git": {
+      "commit": "79a63f08b38231e42944ecd6bbd5adf5b74da4b2",
+      "dirty": true,
+      "branch": "claude/issue-18-jmmn42"
+    }
+  },
+  "configs": {
+    "v11": {
+      "workers": 1,
+      "runs": [
+        {
+          "cmd": [
+            "gap",
+            "-b",
+            "-q",
+            "-r",
+            "-m",
+            "2g"
+          ],
+          "wall_s": 2.9791,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 2.662,
+          "cpu_sys_s": 0.316,
+          "cpu_total_s": 2.978,
+          "max_single_peak_rss_kb": 585188,
+          "log": "/var/tmp/rrm-bench/synth-medium.v11.rep1/harness.log",
+          "samples": 139,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "gap",
+              "wall_s": 2.9575,
+              "cpu_s": 2.95,
+              "peak_rss_kb": 583472
+            }
+          ],
+          "sum_peak_rss_kb": 583472,
+          "sampled_max_single_peak_rss_kb": 583472,
+          "concurrent_peak_rss_kb": 583472,
+          "concurrent_peak_breakdown_kb": {
+            "gap": 583472
+          },
+          "rep": 1,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.v11.rep1",
+          "gap_read_ms": 4,
+          "gap_generate_ms": 1888,
+          "gap_runtime_ms": 2661,
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          }
+        },
+        {
+          "cmd": [
+            "gap",
+            "-b",
+            "-q",
+            "-r",
+            "-m",
+            "2g"
+          ],
+          "wall_s": 2.9332,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 2.624,
+          "cpu_sys_s": 0.307,
+          "cpu_total_s": 2.931,
+          "max_single_peak_rss_kb": 585328,
+          "log": "/var/tmp/rrm-bench/synth-medium.v11.rep2/harness.log",
+          "samples": 138,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "gap",
+              "wall_s": 2.91,
+              "cpu_s": 2.9,
+              "peak_rss_kb": 583016
+            }
+          ],
+          "sum_peak_rss_kb": 583016,
+          "sampled_max_single_peak_rss_kb": 583016,
+          "concurrent_peak_rss_kb": 583016,
+          "concurrent_peak_breakdown_kb": {
+            "gap": 583016
+          },
+          "rep": 2,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.v11.rep2",
+          "gap_read_ms": 5,
+          "gap_generate_ms": 1846,
+          "gap_runtime_ms": 2624,
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        },
+        {
+          "cmd": [
+            "gap",
+            "-b",
+            "-q",
+            "-r",
+            "-m",
+            "2g"
+          ],
+          "wall_s": 2.9533,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 2.605,
+          "cpu_sys_s": 0.348,
+          "cpu_total_s": 2.953,
+          "max_single_peak_rss_kb": 585336,
+          "log": "/var/tmp/rrm-bench/synth-medium.v11.rep3/harness.log",
+          "samples": 139,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "gap",
+              "wall_s": 2.9404,
+              "cpu_s": 2.93,
+              "peak_rss_kb": 584072
+            }
+          ],
+          "sum_peak_rss_kb": 584072,
+          "sampled_max_single_peak_rss_kb": 584072,
+          "concurrent_peak_rss_kb": 584072,
+          "concurrent_peak_breakdown_kb": {
+            "gap": 584072
+          },
+          "rep": 3,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.v11.rep3",
+          "gap_read_ms": 4,
+          "gap_generate_ms": 1818,
+          "gap_runtime_ms": 2602,
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        }
+      ],
+      "reps_requested": 3,
+      "comparison": {
+        "byte_identical": null,
+        "note": "reference configuration"
+      },
+      "summary": {
+        "reps": 3,
+        "ok_reps": 3,
+        "timed_out": false,
+        "exit_codes": [
+          0
+        ],
+        "wall_median_s": 2.9533,
+        "wall_min_s": 2.9332,
+        "wall_max_s": 2.9791,
+        "wall_stdev_s": 0.023,
+        "cpu_total_median_s": 2.953,
+        "max_single_peak_rss_kb": 585336,
+        "sampled_max_single_peak_rss_kb": 584072,
+        "sum_peak_rss_kb": 584072,
+        "concurrent_peak_rss_kb": 584072,
+        "gap_generate_median_ms": 1846,
+        "gap_read_median_ms": 4
+      }
+    },
+    "fast": {
+      "workers": 1,
+      "runs": [
+        {
+          "cmd": [
+            "gap",
+            "-b",
+            "-q",
+            "-r",
+            "-m",
+            "2g"
+          ],
+          "wall_s": 1.1549,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 0.898,
+          "cpu_sys_s": 0.257,
+          "cpu_total_s": 1.154,
+          "max_single_peak_rss_kb": 471856,
+          "log": "/var/tmp/rrm-bench/synth-medium.fast.rep1/harness.log",
+          "samples": 55,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "gap",
+              "wall_s": 1.1386,
+              "cpu_s": 1.13,
+              "peak_rss_kb": 470116
+            }
+          ],
+          "sum_peak_rss_kb": 470116,
+          "sampled_max_single_peak_rss_kb": 470116,
+          "concurrent_peak_rss_kb": 470116,
+          "concurrent_peak_breakdown_kb": {
+            "gap": 470116
+          },
+          "rep": 1,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.fast.rep1",
+          "gap_read_ms": 0,
+          "gap_generate_ms": 176,
+          "gap_runtime_ms": 896,
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        },
+        {
+          "cmd": [
+            "gap",
+            "-b",
+            "-q",
+            "-r",
+            "-m",
+            "2g"
+          ],
+          "wall_s": 1.1451,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 0.927,
+          "cpu_sys_s": 0.216,
+          "cpu_total_s": 1.143,
+          "max_single_peak_rss_kb": 471852,
+          "log": "/var/tmp/rrm-bench/synth-medium.fast.rep2/harness.log",
+          "samples": 55,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "gap",
+              "wall_s": 1.1379,
+              "cpu_s": 1.13,
+              "peak_rss_kb": 471064
+            }
+          ],
+          "sum_peak_rss_kb": 471064,
+          "sampled_max_single_peak_rss_kb": 471064,
+          "concurrent_peak_rss_kb": 471064,
+          "concurrent_peak_breakdown_kb": {
+            "gap": 471064
+          },
+          "rep": 2,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.fast.rep2",
+          "gap_read_ms": 4,
+          "gap_generate_ms": 176,
+          "gap_runtime_ms": 926,
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        },
+        {
+          "cmd": [
+            "gap",
+            "-b",
+            "-q",
+            "-r",
+            "-m",
+            "2g"
+          ],
+          "wall_s": 1.141,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 0.9,
+          "cpu_sys_s": 0.24,
+          "cpu_total_s": 1.14,
+          "max_single_peak_rss_kb": 471800,
+          "log": "/var/tmp/rrm-bench/synth-medium.fast.rep3/harness.log",
+          "samples": 55,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "gap",
+              "wall_s": 1.1364,
+              "cpu_s": 1.12,
+              "peak_rss_kb": 471560
+            }
+          ],
+          "sum_peak_rss_kb": 471560,
+          "sampled_max_single_peak_rss_kb": 471560,
+          "concurrent_peak_rss_kb": 471560,
+          "concurrent_peak_breakdown_kb": {
+            "gap": 471560
+          },
+          "rep": 3,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.fast.rep3",
+          "gap_read_ms": 4,
+          "gap_generate_ms": 158,
+          "gap_runtime_ms": 898,
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        }
+      ],
+      "reps_requested": 3,
+      "comparison": {
+        "vertices": "identical",
+        "edges": "identical",
+        "byte_identical": true,
+        "compare_rrm_dat_exit": 0,
+        "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+      },
+      "summary": {
+        "reps": 3,
+        "ok_reps": 3,
+        "timed_out": false,
+        "exit_codes": [
+          0
+        ],
+        "wall_median_s": 1.1451,
+        "wall_min_s": 1.141,
+        "wall_max_s": 1.1549,
+        "wall_stdev_s": 0.0071,
+        "cpu_total_median_s": 1.143,
+        "max_single_peak_rss_kb": 471856,
+        "sampled_max_single_peak_rss_kb": 471560,
+        "sum_peak_rss_kb": 471560,
+        "concurrent_peak_rss_kb": 471560,
+        "gap_generate_median_ms": 176,
+        "gap_read_median_ms": 4.0
+      }
+    },
+    "par:1": {
+      "workers": 1,
+      "runs": [
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "/var/tmp/rrm-bench/synth-medium.par1.rep1/vertices.dat",
+            "/var/tmp/rrm-bench/synth-medium.par1.rep1/edges.dat",
+            "/home/user/reproduce_rrm/data/bench/synth_n6_eq8_ts30.g"
+          ],
+          "wall_s": 1.1368,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 0.906,
+          "cpu_sys_s": 0.23,
+          "cpu_total_s": 1.136,
+          "max_single_peak_rss_kb": 471612,
+          "log": "/var/tmp/rrm-bench/synth-medium.par1.rep1/harness.log",
+          "samples": 54,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 1.1161,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 3708
+            },
+            {
+              "role": "gap",
+              "wall_s": 1.0945,
+              "cpu_s": 1.1,
+              "peak_rss_kb": 469460
+            }
+          ],
+          "sum_peak_rss_kb": 473168,
+          "sampled_max_single_peak_rss_kb": 469460,
+          "concurrent_peak_rss_kb": 473168,
+          "concurrent_peak_breakdown_kb": {
+            "other": 3708,
+            "gap": 469460
+          },
+          "rep": 1,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.par1.rep1",
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        },
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "/var/tmp/rrm-bench/synth-medium.par1.rep2/vertices.dat",
+            "/var/tmp/rrm-bench/synth-medium.par1.rep2/edges.dat",
+            "/home/user/reproduce_rrm/data/bench/synth_n6_eq8_ts30.g"
+          ],
+          "wall_s": 1.1346,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 0.91,
+          "cpu_sys_s": 0.224,
+          "cpu_total_s": 1.135,
+          "max_single_peak_rss_kb": 471612,
+          "log": "/var/tmp/rrm-bench/synth-medium.par1.rep2/harness.log",
+          "samples": 54,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 1.1137,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 3704
+            },
+            {
+              "role": "gap",
+              "wall_s": 1.092,
+              "cpu_s": 1.1,
+              "peak_rss_kb": 471424
+            }
+          ],
+          "sum_peak_rss_kb": 475128,
+          "sampled_max_single_peak_rss_kb": 471424,
+          "concurrent_peak_rss_kb": 475128,
+          "concurrent_peak_breakdown_kb": {
+            "other": 3704,
+            "gap": 471424
+          },
+          "rep": 2,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.par1.rep2",
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        },
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "/var/tmp/rrm-bench/synth-medium.par1.rep3/vertices.dat",
+            "/var/tmp/rrm-bench/synth-medium.par1.rep3/edges.dat",
+            "/home/user/reproduce_rrm/data/bench/synth_n6_eq8_ts30.g"
+          ],
+          "wall_s": 1.1814,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 0.97,
+          "cpu_sys_s": 0.209,
+          "cpu_total_s": 1.179,
+          "max_single_peak_rss_kb": 471424,
+          "log": "/var/tmp/rrm-bench/synth-medium.par1.rep3/harness.log",
+          "samples": 56,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 1.1698,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 3700
+            },
+            {
+              "role": "gap",
+              "wall_s": 1.1482,
+              "cpu_s": 1.15,
+              "peak_rss_kb": 471196
+            }
+          ],
+          "sum_peak_rss_kb": 474896,
+          "sampled_max_single_peak_rss_kb": 471196,
+          "concurrent_peak_rss_kb": 474896,
+          "concurrent_peak_breakdown_kb": {
+            "other": 3700,
+            "gap": 471196
+          },
+          "rep": 3,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.par1.rep3",
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        }
+      ],
+      "reps_requested": 3,
+      "comparison": {
+        "vertices": "identical",
+        "edges": "identical",
+        "byte_identical": true,
+        "compare_rrm_dat_exit": 0,
+        "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+      },
+      "summary": {
+        "reps": 3,
+        "ok_reps": 3,
+        "timed_out": false,
+        "exit_codes": [
+          0
+        ],
+        "wall_median_s": 1.1368,
+        "wall_min_s": 1.1346,
+        "wall_max_s": 1.1814,
+        "wall_stdev_s": 0.0264,
+        "cpu_total_median_s": 1.136,
+        "max_single_peak_rss_kb": 471612,
+        "sampled_max_single_peak_rss_kb": 471424,
+        "sum_peak_rss_kb": 475128,
+        "concurrent_peak_rss_kb": 475128
+      }
+    },
+    "par:2": {
+      "workers": 2,
+      "runs": [
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "--bundle",
+            "/var/tmp/rrm-bench/synth-medium.par2.rep1/bundle",
+            "/home/user/reproduce_rrm/data/bench/synth_n6_eq8_ts30.g"
+          ],
+          "wall_s": 2.5384,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 2.942,
+          "cpu_sys_s": 0.722,
+          "cpu_total_s": 3.664,
+          "max_single_peak_rss_kb": 465012,
+          "log": "/var/tmp/rrm-bench/synth-medium.par2.rep1/harness.log",
+          "samples": 117,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 2.5201,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 4264
+            },
+            {
+              "role": "master",
+              "wall_s": 1.0765,
+              "cpu_s": 1.06,
+              "peak_rss_kb": 463628
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0651,
+              "cpu_s": 0.05,
+              "peak_rss_kb": 15160
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 1.1195,
+              "cpu_s": 1.13,
+              "peak_rss_kb": 461480
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 1.0978,
+              "cpu_s": 1.1,
+              "peak_rss_kb": 460672
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0642,
+              "cpu_s": 0.06,
+              "peak_rss_kb": 15164
+            },
+            {
+              "role": "other",
+              "wall_s": 0.043,
+              "cpu_s": 0.05,
+              "peak_rss_kb": 15212
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 2800
+            }
+          ],
+          "sum_peak_rss_kb": 1438380,
+          "sampled_max_single_peak_rss_kb": 463628,
+          "concurrent_peak_rss_kb": 924000,
+          "concurrent_peak_breakdown_kb": {
+            "other": 4256,
+            "worker:0": 459072,
+            "worker:1": 460672
+          },
+          "rep": 1,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.par2.rep1",
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "worker_logs": [
+            "edges.dat.part.0.log",
+            "edges.dat.part.1.log",
+            "vertices.dat.master.log"
+          ],
+          "master_wall_s": 1.0765,
+          "master_cpu_s": 1.06,
+          "worker_wall_max_s": 1.1195,
+          "worker_wall_min_s": 1.0978,
+          "worker_cpu_total_s": 2.23,
+          "workers_observed": 2,
+          "driver_overhead_wall_s": 0.3424,
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        },
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "--bundle",
+            "/var/tmp/rrm-bench/synth-medium.par2.rep2/bundle",
+            "/home/user/reproduce_rrm/data/bench/synth_n6_eq8_ts30.g"
+          ],
+          "wall_s": 2.4916,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 2.905,
+          "cpu_sys_s": 0.664,
+          "cpu_total_s": 3.569,
+          "max_single_peak_rss_kb": 465024,
+          "log": "/var/tmp/rrm-bench/synth-medium.par2.rep2/harness.log",
+          "samples": 117,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 2.4766,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 4256
+            },
+            {
+              "role": "master",
+              "wall_s": 1.0738,
+              "cpu_s": 1.07,
+              "peak_rss_kb": 463208
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 2728
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 240
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0426,
+              "cpu_s": 0.05,
+              "peak_rss_kb": 15200
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 1.0589,
+              "cpu_s": 1.05,
+              "peak_rss_kb": 461012
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 1.1017,
+              "cpu_s": 1.09,
+              "peak_rss_kb": 461632
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0429,
+              "cpu_s": 0.04,
+              "peak_rss_kb": 15144
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0658,
+              "cpu_s": 0.06,
+              "peak_rss_kb": 15200
+            }
+          ],
+          "sum_peak_rss_kb": 1438620,
+          "sampled_max_single_peak_rss_kb": 463208,
+          "concurrent_peak_rss_kb": 921884,
+          "concurrent_peak_breakdown_kb": {
+            "other": 4248,
+            "worker:0": 461012,
+            "worker:1": 456624
+          },
+          "rep": 2,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.par2.rep2",
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "worker_logs": [
+            "edges.dat.part.0.log",
+            "edges.dat.part.1.log",
+            "vertices.dat.master.log"
+          ],
+          "master_wall_s": 1.0738,
+          "master_cpu_s": 1.07,
+          "worker_wall_max_s": 1.1017,
+          "worker_wall_min_s": 1.0589,
+          "worker_cpu_total_s": 2.14,
+          "workers_observed": 2,
+          "driver_overhead_wall_s": 0.3161,
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        },
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "--bundle",
+            "/var/tmp/rrm-bench/synth-medium.par2.rep3/bundle",
+            "/home/user/reproduce_rrm/data/bench/synth_n6_eq8_ts30.g"
+          ],
+          "wall_s": 2.4688,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 2.84,
+          "cpu_sys_s": 0.711,
+          "cpu_total_s": 3.551,
+          "max_single_peak_rss_kb": 465100,
+          "log": "/var/tmp/rrm-bench/synth-medium.par2.rep3/harness.log",
+          "samples": 116,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 2.4549,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 4216
+            },
+            {
+              "role": "master",
+              "wall_s": 1.0769,
+              "cpu_s": 1.07,
+              "peak_rss_kb": 464072
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0425,
+              "cpu_s": 0.05,
+              "peak_rss_kb": 15168
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 1.0787,
+              "cpu_s": 1.08,
+              "peak_rss_kb": 461628
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 1.0573,
+              "cpu_s": 1.05,
+              "peak_rss_kb": 460296
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0429,
+              "cpu_s": 0.04,
+              "peak_rss_kb": 15108
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0428,
+              "cpu_s": 0.06,
+              "peak_rss_kb": 15200
+            }
+          ],
+          "sum_peak_rss_kb": 1435688,
+          "sampled_max_single_peak_rss_kb": 464072,
+          "concurrent_peak_rss_kb": 923740,
+          "concurrent_peak_breakdown_kb": {
+            "other": 4208,
+            "worker:0": 459236,
+            "worker:1": 460296
+          },
+          "rep": 3,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.par2.rep3",
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "worker_logs": [
+            "edges.dat.part.0.log",
+            "edges.dat.part.1.log",
+            "vertices.dat.master.log"
+          ],
+          "master_wall_s": 1.0769,
+          "master_cpu_s": 1.07,
+          "worker_wall_max_s": 1.0787,
+          "worker_wall_min_s": 1.0573,
+          "worker_cpu_total_s": 2.13,
+          "workers_observed": 2,
+          "driver_overhead_wall_s": 0.3132,
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        }
+      ],
+      "active_workers": 2,
+      "planned_load": [
+        {
+          "worker": 0,
+          "ts_lo": 1,
+          "ts_hi": 15,
+          "ts_count": 15,
+          "assigned_edges": 7800
+        },
+        {
+          "worker": 1,
+          "ts_lo": 16,
+          "ts_hi": 30,
+          "ts_count": 15,
+          "assigned_edges": 7800
+        }
+      ],
+      "reps_requested": 3,
+      "comparison": {
+        "vertices": "identical",
+        "edges": "identical",
+        "byte_identical": true,
+        "compare_rrm_dat_exit": 0,
+        "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+      },
+      "summary": {
+        "reps": 3,
+        "ok_reps": 3,
+        "timed_out": false,
+        "exit_codes": [
+          0
+        ],
+        "wall_median_s": 2.4916,
+        "wall_min_s": 2.4688,
+        "wall_max_s": 2.5384,
+        "wall_stdev_s": 0.0355,
+        "cpu_total_median_s": 3.569,
+        "max_single_peak_rss_kb": 465100,
+        "sampled_max_single_peak_rss_kb": 464072,
+        "sum_peak_rss_kb": 1438620,
+        "concurrent_peak_rss_kb": 924000
+      }
+    },
+    "par:4": {
+      "workers": 4,
+      "runs": [
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "--bundle",
+            "/var/tmp/rrm-bench/synth-medium.par4.rep1/bundle",
+            "/home/user/reproduce_rrm/data/bench/synth_n6_eq8_ts30.g"
+          ],
+          "wall_s": 2.7104,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 4.723,
+          "cpu_sys_s": 1.167,
+          "cpu_total_s": 5.889,
+          "max_single_peak_rss_kb": 464964,
+          "log": "/var/tmp/rrm-bench/synth-medium.par4.rep1/harness.log",
+          "samples": 127,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 2.7029,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 4256
+            },
+            {
+              "role": "master",
+              "wall_s": 1.0736,
+              "cpu_s": 1.06,
+              "peak_rss_kb": 464256
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0659,
+              "cpu_s": 0.07,
+              "peak_rss_kb": 15116
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 1.047,
+              "cpu_s": 1.04,
+              "peak_rss_kb": 458780
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 1.1337,
+              "cpu_s": 1.11,
+              "peak_rss_kb": 456668
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 1496
+            },
+            {
+              "role": "worker:2",
+              "wall_s": 1.1083,
+              "cpu_s": 1.05,
+              "peak_rss_kb": 456908
+            },
+            {
+              "role": "worker:3",
+              "wall_s": 1.0216,
+              "cpu_s": 1.02,
+              "peak_rss_kb": 455980
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0643,
+              "cpu_s": 0.06,
+              "peak_rss_kb": 15224
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0429,
+              "cpu_s": 0.05,
+              "peak_rss_kb": 15176
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0646,
+              "cpu_s": 0.06,
+              "peak_rss_kb": 15212
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0428,
+              "cpu_s": 0.04,
+              "peak_rss_kb": 15132
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 592
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 1520
+            }
+          ],
+          "sum_peak_rss_kb": 2376316,
+          "sampled_max_single_peak_rss_kb": 464256,
+          "concurrent_peak_rss_kb": 1813720,
+          "concurrent_peak_breakdown_kb": {
+            "other": 4212,
+            "worker:0": 458780,
+            "worker:1": 447228,
+            "worker:2": 447520,
+            "worker:3": 455980
+          },
+          "rep": 1,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.par4.rep1",
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "worker_logs": [
+            "edges.dat.part.0.log",
+            "edges.dat.part.1.log",
+            "edges.dat.part.2.log",
+            "edges.dat.part.3.log",
+            "vertices.dat.master.log"
+          ],
+          "master_wall_s": 1.0736,
+          "master_cpu_s": 1.06,
+          "worker_wall_max_s": 1.1337,
+          "worker_wall_min_s": 1.0216,
+          "worker_cpu_total_s": 4.22,
+          "workers_observed": 4,
+          "driver_overhead_wall_s": 0.5031,
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        },
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "--bundle",
+            "/var/tmp/rrm-bench/synth-medium.par4.rep2/bundle",
+            "/home/user/reproduce_rrm/data/bench/synth_n6_eq8_ts30.g"
+          ],
+          "wall_s": 2.6991,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 4.659,
+          "cpu_sys_s": 1.195,
+          "cpu_total_s": 5.854,
+          "max_single_peak_rss_kb": 464940,
+          "log": "/var/tmp/rrm-bench/synth-medium.par4.rep2/harness.log",
+          "samples": 126,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 2.6779,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 4248
+            },
+            {
+              "role": "master",
+              "wall_s": 1.0748,
+              "cpu_s": 1.06,
+              "peak_rss_kb": 462644
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 0
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0427,
+              "cpu_s": 0.05,
+              "peak_rss_kb": 15156
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 1.09,
+              "cpu_s": 1.07,
+              "peak_rss_kb": 457948
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 1.0471,
+              "cpu_s": 1.05,
+              "peak_rss_kb": 458004
+            },
+            {
+              "role": "worker:2",
+              "wall_s": 1.1116,
+              "cpu_s": 1.04,
+              "peak_rss_kb": 456692
+            },
+            {
+              "role": "worker:3",
+              "wall_s": 1.0471,
+              "cpu_s": 1.05,
+              "peak_rss_kb": 456436
+            },
+            {
+              "role": "other",
+              "wall_s": 0.064,
+              "cpu_s": 0.06,
+              "peak_rss_kb": 15372
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0427,
+              "cpu_s": 0.05,
+              "peak_rss_kb": 15164
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0427,
+              "cpu_s": 0.04,
+              "peak_rss_kb": 15168
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0639,
+              "cpu_s": 0.05,
+              "peak_rss_kb": 15240
+            }
+          ],
+          "sum_peak_rss_kb": 2372072,
+          "sampled_max_single_peak_rss_kb": 462644,
+          "concurrent_peak_rss_kb": 1823784,
+          "concurrent_peak_breakdown_kb": {
+            "other": 4236,
+            "worker:0": 455476,
+            "worker:1": 458004,
+            "worker:2": 449632,
+            "worker:3": 456436
+          },
+          "rep": 2,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.par4.rep2",
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "worker_logs": [
+            "edges.dat.part.0.log",
+            "edges.dat.part.1.log",
+            "edges.dat.part.2.log",
+            "edges.dat.part.3.log",
+            "vertices.dat.master.log"
+          ],
+          "master_wall_s": 1.0748,
+          "master_cpu_s": 1.06,
+          "worker_wall_max_s": 1.1116,
+          "worker_wall_min_s": 1.0471,
+          "worker_cpu_total_s": 4.21,
+          "workers_observed": 4,
+          "driver_overhead_wall_s": 0.5127,
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        },
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "--bundle",
+            "/var/tmp/rrm-bench/synth-medium.par4.rep3/bundle",
+            "/home/user/reproduce_rrm/data/bench/synth_n6_eq8_ts30.g"
+          ],
+          "wall_s": 2.7132,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 4.716,
+          "cpu_sys_s": 1.117,
+          "cpu_total_s": 5.833,
+          "max_single_peak_rss_kb": 465072,
+          "log": "/var/tmp/rrm-bench/synth-medium.par4.rep3/harness.log",
+          "samples": 127,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 2.7071,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 4292
+            },
+            {
+              "role": "master",
+              "wall_s": 1.0465,
+              "cpu_s": 1.04,
+              "peak_rss_kb": 463560
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0643,
+              "cpu_s": 0.05,
+              "peak_rss_kb": 15168
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 1.0563,
+              "cpu_s": 1.06,
+              "peak_rss_kb": 458116
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 1.0563,
+              "cpu_s": 1.05,
+              "peak_rss_kb": 456552
+            },
+            {
+              "role": "worker:2",
+              "wall_s": 1.0563,
+              "cpu_s": 1.04,
+              "peak_rss_kb": 458544
+            },
+            {
+              "role": "worker:3",
+              "wall_s": 1.1645,
+              "cpu_s": 1.07,
+              "peak_rss_kb": 456156
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0646,
+              "cpu_s": 0.05,
+              "peak_rss_kb": 15152
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0431,
+              "cpu_s": 0.05,
+              "peak_rss_kb": 15180
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0652,
+              "cpu_s": 0.05,
+              "peak_rss_kb": 15144
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0651,
+              "cpu_s": 0.06,
+              "peak_rss_kb": 15172
+            }
+          ],
+          "sum_peak_rss_kb": 2373036,
+          "sampled_max_single_peak_rss_kb": 463560,
+          "concurrent_peak_rss_kb": 1815020,
+          "concurrent_peak_breakdown_kb": {
+            "other": 4252,
+            "worker:0": 455680,
+            "worker:1": 456552,
+            "worker:2": 453700,
+            "worker:3": 444836
+          },
+          "rep": 3,
+          "run_dir": "/var/tmp/rrm-bench/synth-medium.par4.rep3",
+          "output": {
+            "vertices": {
+              "lines": 4464,
+              "bytes": 125433,
+              "sha256": "f8476ceeb03ae95826da87b2f9749b8729333a854b7da0cf1eb5031fb59ad20d"
+            },
+            "edges": {
+              "lines": 15600,
+              "bytes": 531706,
+              "sha256": "91f51860c1bf0652c866fc964fb48c58665620325ce6da781d8f0a39360929a3"
+            }
+          },
+          "worker_logs": [
+            "edges.dat.part.0.log",
+            "edges.dat.part.1.log",
+            "edges.dat.part.2.log",
+            "edges.dat.part.3.log",
+            "vertices.dat.master.log"
+          ],
+          "master_wall_s": 1.0465,
+          "master_cpu_s": 1.04,
+          "worker_wall_max_s": 1.1645,
+          "worker_wall_min_s": 1.0563,
+          "worker_cpu_total_s": 4.22,
+          "workers_observed": 4,
+          "driver_overhead_wall_s": 0.5022,
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true,
+            "compare_rrm_dat_exit": 0,
+            "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+          }
+        }
+      ],
+      "active_workers": 4,
+      "planned_load": [
+        {
+          "worker": 0,
+          "ts_lo": 1,
+          "ts_hi": 8,
+          "ts_count": 8,
+          "assigned_edges": 4560
+        },
+        {
+          "worker": 1,
+          "ts_lo": 9,
+          "ts_hi": 16,
+          "ts_count": 8,
+          "assigned_edges": 3960
+        },
+        {
+          "worker": 2,
+          "ts_lo": 17,
+          "ts_hi": 23,
+          "ts_count": 7,
+          "assigned_edges": 3840
+        },
+        {
+          "worker": 3,
+          "ts_lo": 24,
+          "ts_hi": 30,
+          "ts_count": 7,
+          "assigned_edges": 3240
+        }
+      ],
+      "reps_requested": 3,
+      "comparison": {
+        "vertices": "identical",
+        "edges": "identical",
+        "byte_identical": true,
+        "compare_rrm_dat_exit": 0,
+        "compare_rrm_dat": "identical: 4440 vertices, 15600 edges (mode=exact, key=-)"
+      },
+      "summary": {
+        "reps": 3,
+        "ok_reps": 3,
+        "timed_out": false,
+        "exit_codes": [
+          0
+        ],
+        "wall_median_s": 2.7104,
+        "wall_min_s": 2.6991,
+        "wall_max_s": 2.7132,
+        "wall_stdev_s": 0.0075,
+        "cpu_total_median_s": 5.854,
+        "max_single_peak_rss_kb": 465072,
+        "sampled_max_single_peak_rss_kb": 464256,
+        "sum_peak_rss_kb": 2376316,
+        "concurrent_peak_rss_kb": 1823784
+      }
+    }
+  },
+  "comparison_reference_available": true,
+  "finished": "2026-09-10T12:25:43+0000"
+}
