@@ -674,7 +674,8 @@ def main(argv=None):
     ap.add_argument("--label", help="name for this input in the report")
     ap.add_argument("--config", action="append", dest="configs",
                     type=parse_config, required=True,
-                    help="v11 | fast | par:<k>; repeatable, order preserved")
+                    help="v11 | fast | par:<k>; repeatable, report order "
+                         "preserved (reference runs first)")
     ap.add_argument("--reps", type=int, default=3,
                     help="repetitions per configuration (default 3)")
     ap.add_argument("--reps-for", action="append", default=[],
@@ -726,9 +727,9 @@ def main(argv=None):
         # The driver always requests labels; comparing a labelled parallel run
         # against an unlabelled sequential one would be meaningless.
         for cfg in args.configs:
-            if cfg["kind"] == "par" and cfg["workers"] > 1:
+            if cfg["kind"] == "par":
                 ap.error("--no-vlabel/--no-elabel cannot be compared with "
-                         "par:k>1, which always writes labels")
+                         "par:k, which always writes labels")
 
     outdir = os.path.abspath(args.outdir)
     if outdir == ROOT or outdir.startswith(ROOT + os.sep):
@@ -767,7 +768,11 @@ def main(argv=None):
     }
 
     ref_pair = None
-    for cfg in args.configs:
+    # Establish the reference before comparing (and deleting) other outputs.
+    # Keep the requested order in report["order"] for presentation.
+    execution_configs = sorted(args.configs,
+                               key=lambda cfg: cfg["name"] != reference)
+    for cfg in execution_configs:
         entry = {"workers": cfg["workers"], "runs": []}
         if cfg["kind"] == "par" and cfg["workers"] > 1 and nts:
             active, slices = ts_slices(cfg["workers"], nts)
@@ -868,7 +873,7 @@ def main(argv=None):
                 break
 
         entry["summary"] = summarize(entry["runs"])
-        if cfg["name"] == reference:
+        if cfg["name"] == reference and "comparison" not in entry:
             entry["comparison"] = {"byte_identical": None,
                                    "note": "reference configuration"}
 

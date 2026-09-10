@@ -16,6 +16,7 @@ BENCH="${ROOT}/tools/rrm_bench.py"
 SYNTH="${ROOT}/tools/make_synthetic_input.py"
 
 cd "$ROOT"
+python3 "$ROOT/tests/test_rrm_bench.py"
 rm -rf "$OUT"
 mkdir -p "$OUT"
 
