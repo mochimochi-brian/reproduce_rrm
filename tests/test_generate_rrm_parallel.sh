@@ -33,6 +33,34 @@ if [[ "$("$DRIVER" --active-workers 4 0)" != 0 ]]; then
 fi
 echo "active-worker cap ok"
 
+echo "== TS slice partition =="
+# The slice helper is what workers are given; tools/rrm_bench.py reads it to
+# report the per-worker load, so it is exercised directly here.
+if [[ "$("$DRIVER" --ts-slice 0 3 10)" != "1 4" ]]; then
+    echo "expected worker 0 of 3 to take TS 1..4 of 10" >&2
+    exit 1
+fi
+if [[ "$("$DRIVER" --ts-slice 2 3 10)" != "8 10" ]]; then
+    echo "expected worker 2 of 3 to take TS 8..10 of 10" >&2
+    exit 1
+fi
+if [[ "$("$DRIVER" --ts-slice 3 4 3)" != "4 3" ]]; then
+    echo "expected an empty slice (lo>hi) for a worker past the TS count" >&2
+    exit 1
+fi
+slice_cover="$(
+    for w in 0 1 2 3; do "$DRIVER" --ts-slice "$w" 4 9; done |
+    while read -r lo hi; do
+        [[ "$lo" -le "$hi" ]] || continue
+        seq "$lo" "$hi"
+    done | tr '\n' ' '
+)"
+if [[ "$slice_cover" != "1 2 3 4 5 6 7 8 9 " ]]; then
+    echo "slices must partition 1..nts in order, got '$slice_cover'" >&2
+    exit 1
+fi
+echo "TS slice partition ok"
+
 echo "== GAP string escape =="
 if [[ "$("$DRIVER" --gap-string 'foo"bar')" != '"foo\"bar"' ]]; then
     echo "expected quoted path with escaped double-quote" >&2

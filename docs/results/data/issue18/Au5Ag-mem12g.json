@@ -1,0 +1,1193 @@
+{
+  "label": "Au5Ag-mem12g",
+  "reference": "fast",
+  "order": [
+    "fast",
+    "par:2",
+    "par:4"
+  ],
+  "reps": 3,
+  "mem": "12g",
+  "timeout": 0,
+  "started": "2026-09-10T12:31:53+0000",
+  "outdir": "/var/tmp/rrm-bench",
+  "input": {
+    "path": "data/Au5Ag_AFIR.g",
+    "sha256": "d79133bfd2794a516873db57cc4c2f85e518fdbf68c8035ff9d9d15246b5dd10",
+    "bytes": 28574,
+    "stats": {
+      "raw": "RRM_STAT_SYM_ORDER=120\nRRM_STAT_DEGREE=6\nRRM_STAT_NEQ=17\nRRM_STAT_NTS=86\nRRM_STAT_NVERT=1704\nRRM_STAT_EQ_VERTS=60,24,120,120,120,60,60,120,120,120,120,120,120,120,120,60,120\nRRM_STAT_NEDGE=10020\nRRM_STAT_TS_EDGES=120,120,60,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,60,120,120,60,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,60,120,120,60,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120,120",
+      "sym_order": 120,
+      "degree": 6,
+      "neq": 17,
+      "nts": 86,
+      "nvert": 1704,
+      "eq_verts": [
+        60,
+        24,
+        120,
+        120,
+        120,
+        60,
+        60,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        60,
+        120
+      ],
+      "nedge": 10020,
+      "ts_edges": [
+        120,
+        120,
+        60,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        60,
+        120,
+        120,
+        60,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        60,
+        120,
+        120,
+        60,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120
+      ]
+    }
+  },
+  "environment": {
+    "gap": "gap",
+    "gap_version": "4.12.1",
+    "uname": "Linux vm 6.18.44-fc-v24 #1 SMP PREEMPT_DYNAMIC @0 x86_64 x86_64",
+    "cpu_model": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+    "cpus": 4,
+    "mem_total_kb": 16461028,
+    "python": "3.11.15",
+    "git": {
+      "commit": "79a63f08b38231e42944ecd6bbd5adf5b74da4b2",
+      "dirty": true,
+      "branch": "claude/issue-18-jmmn42"
+    }
+  },
+  "configs": {
+    "fast": {
+      "workers": 1,
+      "runs": [
+        {
+          "cmd": [
+            "gap",
+            "-b",
+            "-q",
+            "-r",
+            "-m",
+            "12g"
+          ],
+          "wall_s": 2.1397,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 1.4,
+          "cpu_sys_s": 0.738,
+          "cpu_total_s": 2.138,
+          "max_single_peak_rss_kb": 1800040,
+          "log": "/var/tmp/rrm-bench/Au5Ag-mem12g.fast.rep1/harness.log",
+          "samples": 101,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "gap",
+              "wall_s": 2.1286,
+              "cpu_s": 2.11,
+              "peak_rss_kb": 1799832
+            }
+          ],
+          "sum_peak_rss_kb": 1799832,
+          "sampled_max_single_peak_rss_kb": 1799832,
+          "concurrent_peak_rss_kb": 1799832,
+          "concurrent_peak_breakdown_kb": {
+            "gap": 1799832
+          },
+          "rep": 1,
+          "run_dir": "/var/tmp/rrm-bench/Au5Ag-mem12g.fast.rep1",
+          "gap_read_ms": 5,
+          "gap_generate_ms": 287,
+          "gap_runtime_ms": 1397,
+          "output": {
+            "vertices": {
+              "lines": 1755,
+              "bytes": 45294,
+              "sha256": "1bfd98d980460be68e59936540436a795f3d200b119ddf5ead66b560d85428dd"
+            },
+            "edges": {
+              "lines": 10020,
+              "bytes": 309563,
+              "sha256": "3855448e61975191f7eae3f5620b55f0cb9480adc4662dd11186d9cb56462e66"
+            }
+          }
+        },
+        {
+          "cmd": [
+            "gap",
+            "-b",
+            "-q",
+            "-r",
+            "-m",
+            "12g"
+          ],
+          "wall_s": 3.0501,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 1.588,
+          "cpu_sys_s": 1.457,
+          "cpu_total_s": 3.046,
+          "max_single_peak_rss_kb": 1799988,
+          "log": "/var/tmp/rrm-bench/Au5Ag-mem12g.fast.rep2/harness.log",
+          "samples": 136,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "gap",
+              "wall_s": 3.0274,
+              "cpu_s": 3.01,
+              "peak_rss_kb": 1799280
+            }
+          ],
+          "sum_peak_rss_kb": 1799280,
+          "sampled_max_single_peak_rss_kb": 1799280,
+          "concurrent_peak_rss_kb": 1799280,
+          "concurrent_peak_breakdown_kb": {
+            "gap": 1799280
+          },
+          "rep": 2,
+          "run_dir": "/var/tmp/rrm-bench/Au5Ag-mem12g.fast.rep2",
+          "gap_read_ms": 8,
+          "gap_generate_ms": 383,
+          "gap_runtime_ms": 1588,
+          "output": {
+            "vertices": {
+              "lines": 1755,
+              "bytes": 45294,
+              "sha256": "1bfd98d980460be68e59936540436a795f3d200b119ddf5ead66b560d85428dd"
+            },
+            "edges": {
+              "lines": 10020,
+              "bytes": 309563,
+              "sha256": "3855448e61975191f7eae3f5620b55f0cb9480adc4662dd11186d9cb56462e66"
+            }
+          },
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true
+          }
+        },
+        {
+          "cmd": [
+            "gap",
+            "-b",
+            "-q",
+            "-r",
+            "-m",
+            "12g"
+          ],
+          "wall_s": 3.0177,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 1.495,
+          "cpu_sys_s": 1.522,
+          "cpu_total_s": 3.017,
+          "max_single_peak_rss_kb": 1800024,
+          "log": "/var/tmp/rrm-bench/Au5Ag-mem12g.fast.rep3/harness.log",
+          "samples": 142,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "gap",
+              "wall_s": 3.0044,
+              "cpu_s": 2.99,
+              "peak_rss_kb": 1799864
+            }
+          ],
+          "sum_peak_rss_kb": 1799864,
+          "sampled_max_single_peak_rss_kb": 1799864,
+          "concurrent_peak_rss_kb": 1799864,
+          "concurrent_peak_breakdown_kb": {
+            "gap": 1799864
+          },
+          "rep": 3,
+          "run_dir": "/var/tmp/rrm-bench/Au5Ag-mem12g.fast.rep3",
+          "gap_read_ms": 10,
+          "gap_generate_ms": 364,
+          "gap_runtime_ms": 1494,
+          "output": {
+            "vertices": {
+              "lines": 1755,
+              "bytes": 45294,
+              "sha256": "1bfd98d980460be68e59936540436a795f3d200b119ddf5ead66b560d85428dd"
+            },
+            "edges": {
+              "lines": 10020,
+              "bytes": 309563,
+              "sha256": "3855448e61975191f7eae3f5620b55f0cb9480adc4662dd11186d9cb56462e66"
+            }
+          },
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true
+          }
+        }
+      ],
+      "reps_requested": 3,
+      "comparison": {
+        "byte_identical": null,
+        "note": "reference configuration"
+      },
+      "summary": {
+        "reps": 3,
+        "ok_reps": 3,
+        "timed_out": false,
+        "exit_codes": [
+          0
+        ],
+        "wall_median_s": 3.0177,
+        "wall_min_s": 2.1397,
+        "wall_max_s": 3.0501,
+        "wall_stdev_s": 0.5165,
+        "cpu_total_median_s": 3.017,
+        "max_single_peak_rss_kb": 1800040,
+        "sampled_max_single_peak_rss_kb": 1799864,
+        "sum_peak_rss_kb": 1799864,
+        "concurrent_peak_rss_kb": 1799864,
+        "gap_generate_median_ms": 364,
+        "gap_read_median_ms": 8
+      }
+    },
+    "par:2": {
+      "workers": 2,
+      "runs": [
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "--bundle",
+            "/var/tmp/rrm-bench/Au5Ag-mem12g.par2.rep1/bundle",
+            "/home/user/reproduce_rrm/data/Au5Ag_AFIR.g"
+          ],
+          "wall_s": 10.3023,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 4.032,
+          "cpu_sys_s": 13.958,
+          "cpu_total_s": 17.99,
+          "max_single_peak_rss_kb": 1794688,
+          "log": "/var/tmp/rrm-bench/Au5Ag-mem12g.par2.rep1/harness.log",
+          "samples": 477,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 10.2919,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 4272
+            },
+            {
+              "role": "master",
+              "wall_s": 2.048,
+              "cpu_s": 2.04,
+              "peak_rss_kb": 1792788
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0436,
+              "cpu_s": 0.03,
+              "peak_rss_kb": 15176
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 7.6615,
+              "cpu_s": 7.66,
+              "peak_rss_kb": 1763768
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 8.006,
+              "cpu_s": 8.0,
+              "peak_rss_kb": 1762456
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0216,
+              "cpu_s": 0.02,
+              "peak_rss_kb": 14824
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0214,
+              "cpu_s": 0.04,
+              "peak_rss_kb": 15368
+            }
+          ],
+          "sum_peak_rss_kb": 5368652,
+          "sampled_max_single_peak_rss_kb": 1792788,
+          "concurrent_peak_rss_kb": 3489340,
+          "concurrent_peak_breakdown_kb": {
+            "other": 4236,
+            "worker:0": 1763768,
+            "worker:1": 1721336
+          },
+          "rep": 1,
+          "run_dir": "/var/tmp/rrm-bench/Au5Ag-mem12g.par2.rep1",
+          "output": {
+            "vertices": {
+              "lines": 1755,
+              "bytes": 45294,
+              "sha256": "1bfd98d980460be68e59936540436a795f3d200b119ddf5ead66b560d85428dd"
+            },
+            "edges": {
+              "lines": 10020,
+              "bytes": 309563,
+              "sha256": "3855448e61975191f7eae3f5620b55f0cb9480adc4662dd11186d9cb56462e66"
+            }
+          },
+          "worker_logs": [
+            "edges.dat.part.0.log",
+            "edges.dat.part.1.log",
+            "vertices.dat.master.log"
+          ],
+          "master_wall_s": 2.048,
+          "master_cpu_s": 2.04,
+          "worker_wall_max_s": 8.006,
+          "worker_wall_min_s": 7.6615,
+          "worker_cpu_total_s": 15.66,
+          "workers_observed": 2,
+          "driver_overhead_wall_s": 0.2483,
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true
+          }
+        },
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "--bundle",
+            "/var/tmp/rrm-bench/Au5Ag-mem12g.par2.rep2/bundle",
+            "/home/user/reproduce_rrm/data/Au5Ag_AFIR.g"
+          ],
+          "wall_s": 7.1262,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 4.364,
+          "cpu_sys_s": 7.41,
+          "cpu_total_s": 11.774,
+          "max_single_peak_rss_kb": 1794636,
+          "log": "/var/tmp/rrm-bench/Au5Ag-mem12g.par2.rep2/harness.log",
+          "samples": 331,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 7.1138,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 4224
+            },
+            {
+              "role": "master",
+              "wall_s": 2.1932,
+              "cpu_s": 2.18,
+              "peak_rss_kb": 1794432
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0221,
+              "cpu_s": 0.02,
+              "peak_rss_kb": 15168
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 4.7044,
+              "cpu_s": 4.69,
+              "peak_rss_kb": 1762080
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 4.6189,
+              "cpu_s": 4.63,
+              "peak_rss_kb": 1761908
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0219,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 14848
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0216,
+              "cpu_s": 0.03,
+              "peak_rss_kb": 15364
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 272
+            }
+          ],
+          "sum_peak_rss_kb": 5368296,
+          "sampled_max_single_peak_rss_kb": 1794432,
+          "concurrent_peak_rss_kb": 3524240,
+          "concurrent_peak_breakdown_kb": {
+            "other": 4196,
+            "worker:0": 1758136,
+            "worker:1": 1761908
+          },
+          "rep": 2,
+          "run_dir": "/var/tmp/rrm-bench/Au5Ag-mem12g.par2.rep2",
+          "output": {
+            "vertices": {
+              "lines": 1755,
+              "bytes": 45294,
+              "sha256": "1bfd98d980460be68e59936540436a795f3d200b119ddf5ead66b560d85428dd"
+            },
+            "edges": {
+              "lines": 10020,
+              "bytes": 309563,
+              "sha256": "3855448e61975191f7eae3f5620b55f0cb9480adc4662dd11186d9cb56462e66"
+            }
+          },
+          "worker_logs": [
+            "edges.dat.part.0.log",
+            "edges.dat.part.1.log",
+            "vertices.dat.master.log"
+          ],
+          "master_wall_s": 2.1932,
+          "master_cpu_s": 2.18,
+          "worker_wall_max_s": 4.7044,
+          "worker_wall_min_s": 4.6189,
+          "worker_cpu_total_s": 9.32,
+          "workers_observed": 2,
+          "driver_overhead_wall_s": 0.2286,
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true
+          }
+        },
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "--bundle",
+            "/var/tmp/rrm-bench/Au5Ag-mem12g.par2.rep3/bundle",
+            "/home/user/reproduce_rrm/data/Au5Ag_AFIR.g"
+          ],
+          "wall_s": 7.0054,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 4.365,
+          "cpu_sys_s": 6.783,
+          "cpu_total_s": 11.148,
+          "max_single_peak_rss_kb": 1794812,
+          "log": "/var/tmp/rrm-bench/Au5Ag-mem12g.par2.rep3/harness.log",
+          "samples": 324,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 6.9941,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 4244
+            },
+            {
+              "role": "master",
+              "wall_s": 2.2302,
+              "cpu_s": 2.22,
+              "peak_rss_kb": 1794420
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0214,
+              "cpu_s": 0.03,
+              "peak_rss_kb": 15112
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 4.1464,
+              "cpu_s": 4.14,
+              "peak_rss_kb": 1763020
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 4.4537,
+              "cpu_s": 4.45,
+              "peak_rss_kb": 1763012
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 208
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0217,
+              "cpu_s": 0.03,
+              "peak_rss_kb": 15156
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0216,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 15028
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 0
+            }
+          ],
+          "sum_peak_rss_kb": 5370200,
+          "sampled_max_single_peak_rss_kb": 1794420,
+          "concurrent_peak_rss_kb": 3497976,
+          "concurrent_peak_breakdown_kb": {
+            "other": 4208,
+            "worker:0": 1763020,
+            "worker:1": 1730748
+          },
+          "rep": 3,
+          "run_dir": "/var/tmp/rrm-bench/Au5Ag-mem12g.par2.rep3",
+          "output": {
+            "vertices": {
+              "lines": 1755,
+              "bytes": 45294,
+              "sha256": "1bfd98d980460be68e59936540436a795f3d200b119ddf5ead66b560d85428dd"
+            },
+            "edges": {
+              "lines": 10020,
+              "bytes": 309563,
+              "sha256": "3855448e61975191f7eae3f5620b55f0cb9480adc4662dd11186d9cb56462e66"
+            }
+          },
+          "worker_logs": [
+            "edges.dat.part.0.log",
+            "edges.dat.part.1.log",
+            "vertices.dat.master.log"
+          ],
+          "master_wall_s": 2.2302,
+          "master_cpu_s": 2.22,
+          "worker_wall_max_s": 4.4537,
+          "worker_wall_min_s": 4.1464,
+          "worker_cpu_total_s": 8.59,
+          "workers_observed": 2,
+          "driver_overhead_wall_s": 0.3215,
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true
+          }
+        }
+      ],
+      "active_workers": 2,
+      "planned_load": [
+        {
+          "worker": 0,
+          "ts_lo": 1,
+          "ts_hi": 43,
+          "ts_count": 43,
+          "assigned_edges": 4980
+        },
+        {
+          "worker": 1,
+          "ts_lo": 44,
+          "ts_hi": 86,
+          "ts_count": 43,
+          "assigned_edges": 5040
+        }
+      ],
+      "reps_requested": 3,
+      "comparison": {
+        "vertices": "identical",
+        "edges": "identical",
+        "byte_identical": true
+      },
+      "summary": {
+        "reps": 3,
+        "ok_reps": 3,
+        "timed_out": false,
+        "exit_codes": [
+          0
+        ],
+        "wall_median_s": 7.1262,
+        "wall_min_s": 7.0054,
+        "wall_max_s": 10.3023,
+        "wall_stdev_s": 1.8696,
+        "cpu_total_median_s": 11.774,
+        "max_single_peak_rss_kb": 1794812,
+        "sampled_max_single_peak_rss_kb": 1794432,
+        "sum_peak_rss_kb": 5370200,
+        "concurrent_peak_rss_kb": 3524240
+      }
+    },
+    "par:4": {
+      "workers": 4,
+      "runs": [
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "--bundle",
+            "/var/tmp/rrm-bench/Au5Ag-mem12g.par4.rep1/bundle",
+            "/home/user/reproduce_rrm/data/Au5Ag_AFIR.g"
+          ],
+          "wall_s": 11.8333,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 6.569,
+          "cpu_sys_s": 28.679,
+          "cpu_total_s": 35.248,
+          "max_single_peak_rss_kb": 1794664,
+          "log": "/var/tmp/rrm-bench/Au5Ag-mem12g.par4.rep1/harness.log",
+          "samples": 540,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 11.8093,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 4248
+            },
+            {
+              "role": "master",
+              "wall_s": 2.9556,
+              "cpu_s": 2.96,
+              "peak_rss_kb": 1793212
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 3180
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0215,
+              "cpu_s": 0.03,
+              "peak_rss_kb": 15152
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 8.3481,
+              "cpu_s": 8.27,
+              "peak_rss_kb": 1760880
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 8.4583,
+              "cpu_s": 7.87,
+              "peak_rss_kb": 1759644
+            },
+            {
+              "role": "worker:2",
+              "wall_s": 7.6033,
+              "cpu_s": 7.59,
+              "peak_rss_kb": 1760960
+            },
+            {
+              "role": "worker:3",
+              "wall_s": 8.0634,
+              "cpu_s": 8.06,
+              "peak_rss_kb": 1759760
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0451,
+              "cpu_s": 0.04,
+              "peak_rss_kb": 15244
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0225,
+              "cpu_s": 0.04,
+              "peak_rss_kb": 15176
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0217,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 15280
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0436,
+              "cpu_s": 0.04,
+              "peak_rss_kb": 15400
+            }
+          ],
+          "sum_peak_rss_kb": 8918136,
+          "sampled_max_single_peak_rss_kb": 1793212,
+          "concurrent_peak_rss_kb": 6635488,
+          "concurrent_peak_breakdown_kb": {
+            "other": 4236,
+            "worker:0": 1616432,
+            "worker:1": 1583016,
+            "worker:2": 1760960,
+            "worker:3": 1670844
+          },
+          "rep": 1,
+          "run_dir": "/var/tmp/rrm-bench/Au5Ag-mem12g.par4.rep1",
+          "output": {
+            "vertices": {
+              "lines": 1755,
+              "bytes": 45294,
+              "sha256": "1bfd98d980460be68e59936540436a795f3d200b119ddf5ead66b560d85428dd"
+            },
+            "edges": {
+              "lines": 10020,
+              "bytes": 309563,
+              "sha256": "3855448e61975191f7eae3f5620b55f0cb9480adc4662dd11186d9cb56462e66"
+            }
+          },
+          "worker_logs": [
+            "edges.dat.part.0.log",
+            "edges.dat.part.1.log",
+            "edges.dat.part.2.log",
+            "edges.dat.part.3.log",
+            "vertices.dat.master.log"
+          ],
+          "master_wall_s": 2.9556,
+          "master_cpu_s": 2.96,
+          "worker_wall_max_s": 8.4583,
+          "worker_wall_min_s": 7.6033,
+          "worker_cpu_total_s": 31.79,
+          "workers_observed": 4,
+          "driver_overhead_wall_s": 0.4194,
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true
+          }
+        },
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "--bundle",
+            "/var/tmp/rrm-bench/Au5Ag-mem12g.par4.rep2/bundle",
+            "/home/user/reproduce_rrm/data/Au5Ag_AFIR.g"
+          ],
+          "wall_s": 9.9844,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 8.353,
+          "cpu_sys_s": 21.215,
+          "cpu_total_s": 29.568,
+          "max_single_peak_rss_kb": 1794748,
+          "log": "/var/tmp/rrm-bench/Au5Ag-mem12g.par4.rep2/harness.log",
+          "samples": 453,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 9.968,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 4252
+            },
+            {
+              "role": "master",
+              "wall_s": 2.3977,
+              "cpu_s": 2.41,
+              "peak_rss_kb": 1793168
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0225,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 14824
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 6.9413,
+              "cpu_s": 6.93,
+              "peak_rss_kb": 1761876
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 7.1797,
+              "cpu_s": 6.64,
+              "peak_rss_kb": 1760756
+            },
+            {
+              "role": "worker:2",
+              "wall_s": 6.3504,
+              "cpu_s": 6.35,
+              "peak_rss_kb": 1761792
+            },
+            {
+              "role": "worker:3",
+              "wall_s": 6.8545,
+              "cpu_s": 6.78,
+              "peak_rss_kb": 1760956
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 2712
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 796
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0216,
+              "cpu_s": 0.03,
+              "peak_rss_kb": 15180
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0432,
+              "cpu_s": 0.03,
+              "peak_rss_kb": 15176
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0216,
+              "cpu_s": 0.02,
+              "peak_rss_kb": 15200
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0215,
+              "cpu_s": 0.02,
+              "peak_rss_kb": 15136
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 0
+            }
+          ],
+          "sum_peak_rss_kb": 8921824,
+          "sampled_max_single_peak_rss_kb": 1793168,
+          "concurrent_peak_rss_kb": 6681424,
+          "concurrent_peak_breakdown_kb": {
+            "other": 4212,
+            "worker:0": 1644540,
+            "worker:1": 1609616,
+            "worker:2": 1761792,
+            "worker:3": 1661264
+          },
+          "rep": 2,
+          "run_dir": "/var/tmp/rrm-bench/Au5Ag-mem12g.par4.rep2",
+          "output": {
+            "vertices": {
+              "lines": 1755,
+              "bytes": 45294,
+              "sha256": "1bfd98d980460be68e59936540436a795f3d200b119ddf5ead66b560d85428dd"
+            },
+            "edges": {
+              "lines": 10020,
+              "bytes": 309563,
+              "sha256": "3855448e61975191f7eae3f5620b55f0cb9480adc4662dd11186d9cb56462e66"
+            }
+          },
+          "worker_logs": [
+            "edges.dat.part.0.log",
+            "edges.dat.part.1.log",
+            "edges.dat.part.2.log",
+            "edges.dat.part.3.log",
+            "vertices.dat.master.log"
+          ],
+          "master_wall_s": 2.3977,
+          "master_cpu_s": 2.41,
+          "worker_wall_max_s": 7.1797,
+          "worker_wall_min_s": 6.3504,
+          "worker_cpu_total_s": 26.7,
+          "workers_observed": 4,
+          "driver_overhead_wall_s": 0.407,
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true
+          }
+        },
+        {
+          "cmd": [
+            "/home/user/reproduce_rrm/generate_rrm_v11_parallel.sh",
+            "--bundle",
+            "/var/tmp/rrm-bench/Au5Ag-mem12g.par4.rep3/bundle",
+            "/home/user/reproduce_rrm/data/Au5Ag_AFIR.g"
+          ],
+          "wall_s": 9.6795,
+          "exit_code": 0,
+          "timed_out": false,
+          "cpu_user_s": 8.399,
+          "cpu_sys_s": 20.442,
+          "cpu_total_s": 28.841,
+          "max_single_peak_rss_kb": 1794612,
+          "log": "/var/tmp/rrm-bench/Au5Ag-mem12g.par4.rep3/harness.log",
+          "samples": 435,
+          "sample_interval_s": 0.02,
+          "processes": [
+            {
+              "role": "other",
+              "wall_s": 9.6699,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 4268
+            },
+            {
+              "role": "master",
+              "wall_s": 2.3702,
+              "cpu_s": 2.36,
+              "peak_rss_kb": 1794340
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0433,
+              "cpu_s": 0.05,
+              "peak_rss_kb": 15156
+            },
+            {
+              "role": "worker:0",
+              "wall_s": 6.9009,
+              "cpu_s": 6.59,
+              "peak_rss_kb": 1762156
+            },
+            {
+              "role": "worker:1",
+              "wall_s": 6.4559,
+              "cpu_s": 6.17,
+              "peak_rss_kb": 1760936
+            },
+            {
+              "role": "worker:2",
+              "wall_s": 6.7492,
+              "cpu_s": 6.73,
+              "peak_rss_kb": 1760952
+            },
+            {
+              "role": "worker:3",
+              "wall_s": 6.5219,
+              "cpu_s": 6.49,
+              "peak_rss_kb": 1759892
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0222,
+              "cpu_s": 0.01,
+              "peak_rss_kb": 14628
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0223,
+              "cpu_s": 0.03,
+              "peak_rss_kb": 15348
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0227,
+              "cpu_s": 0.03,
+              "peak_rss_kb": 15176
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0216,
+              "cpu_s": 0.03,
+              "peak_rss_kb": 15180
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 532
+            },
+            {
+              "role": "other",
+              "wall_s": 0.0,
+              "cpu_s": 0.0,
+              "peak_rss_kb": 2020
+            }
+          ],
+          "sum_peak_rss_kb": 8920584,
+          "sampled_max_single_peak_rss_kb": 1794340,
+          "concurrent_peak_rss_kb": 6926744,
+          "concurrent_peak_breakdown_kb": {
+            "other": 4228,
+            "worker:0": 1678428,
+            "worker:1": 1760936,
+            "worker:2": 1731604,
+            "worker:3": 1751548
+          },
+          "rep": 3,
+          "run_dir": "/var/tmp/rrm-bench/Au5Ag-mem12g.par4.rep3",
+          "output": {
+            "vertices": {
+              "lines": 1755,
+              "bytes": 45294,
+              "sha256": "1bfd98d980460be68e59936540436a795f3d200b119ddf5ead66b560d85428dd"
+            },
+            "edges": {
+              "lines": 10020,
+              "bytes": 309563,
+              "sha256": "3855448e61975191f7eae3f5620b55f0cb9480adc4662dd11186d9cb56462e66"
+            }
+          },
+          "worker_logs": [
+            "edges.dat.part.0.log",
+            "edges.dat.part.1.log",
+            "edges.dat.part.2.log",
+            "edges.dat.part.3.log",
+            "vertices.dat.master.log"
+          ],
+          "master_wall_s": 2.3702,
+          "master_cpu_s": 2.36,
+          "worker_wall_max_s": 6.9009,
+          "worker_wall_min_s": 6.4559,
+          "worker_cpu_total_s": 25.98,
+          "workers_observed": 4,
+          "driver_overhead_wall_s": 0.4084,
+          "comparison": {
+            "vertices": "identical",
+            "edges": "identical",
+            "byte_identical": true
+          }
+        }
+      ],
+      "active_workers": 4,
+      "planned_load": [
+        {
+          "worker": 0,
+          "ts_lo": 1,
+          "ts_hi": 22,
+          "ts_count": 22,
+          "assigned_edges": 2460
+        },
+        {
+          "worker": 1,
+          "ts_lo": 23,
+          "ts_hi": 44,
+          "ts_count": 22,
+          "assigned_edges": 2640
+        },
+        {
+          "worker": 2,
+          "ts_lo": 45,
+          "ts_hi": 65,
+          "ts_count": 21,
+          "assigned_edges": 2400
+        },
+        {
+          "worker": 3,
+          "ts_lo": 66,
+          "ts_hi": 86,
+          "ts_count": 21,
+          "assigned_edges": 2520
+        }
+      ],
+      "reps_requested": 3,
+      "comparison": {
+        "vertices": "identical",
+        "edges": "identical",
+        "byte_identical": true
+      },
+      "summary": {
+        "reps": 3,
+        "ok_reps": 3,
+        "timed_out": false,
+        "exit_codes": [
+          0
+        ],
+        "wall_median_s": 9.9844,
+        "wall_min_s": 9.6795,
+        "wall_max_s": 11.8333,
+        "wall_stdev_s": 1.1655,
+        "cpu_total_median_s": 29.568,
+        "max_single_peak_rss_kb": 1794748,
+        "sampled_max_single_peak_rss_kb": 1794340,
+        "sum_peak_rss_kb": 8921824,
+        "concurrent_peak_rss_kb": 6926744
+      }
+    }
+  },
+  "comparison_reference_available": true,
+  "finished": "2026-09-10T12:32:58+0000"
+}

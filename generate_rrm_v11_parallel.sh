@@ -181,6 +181,15 @@ if [[ "${1:-}" == --active-workers ]]; then
     exit 0
 fi
 
+if [[ "${1:-}" == --ts-slice ]]; then
+    if [[ $# -ne 4 ]]; then
+        echo "Usage: $0 --ts-slice W K NTS" >&2
+        exit 1
+    fi
+    rrm_ts_slice "$2" "$3" "$4"
+    exit 0
+fi
+
 if [[ "${1:-}" == --gap-string ]]; then
     if [[ $# -ne 2 ]]; then
         echo "Usage: $0 --gap-string PATH" >&2
