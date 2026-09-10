@@ -17,9 +17,12 @@ See README's “Parallel output bundles” for migration, reading, retention, an
 filesystem assumptions. Interruption after publication can return nonzero with
 the complete new generation already selected. Cleanup preserves that generation.
 
-The vertex correspondence check requested in #16 remains separate; its eventual
-validation must run before `rrm_publish_pair` for the bundle to be published.
-The manifest records the existing count checks, not that future stronger check.
+This report describes the original #15 implementation, which checked counts
+only. Issue #16 subsequently adds ordered vertex correspondence validation
+before `rrm_publish_pair`, and records its digest in the manifest. See
+[the correspondence contract](../specs/parallel-vertex-map.md) and
+[Issue #16 results](issue16-vertex-map.md). It also postpones temporary shard
+cleanup until successful publication so failed preparations retain diagnostics.
 
 ## Verification environment and commands
 

@@ -25,10 +25,23 @@ if os.environ.get('PID_LOG'):
     with open(os.environ['PID_LOG'], 'a') as f:
         f.write(str(os.getpid()) + '\n')
 generation = os.environ.get('GENERATION', 'new')
+role = 'master' if master else 'worker'
+mode = os.environ.get('BAD_MAP') if os.environ.get('BAD_ROLE') == role else None
+mapping = 'RRM_VERTEX_MAP\t1\t1\t1\t2\n1\t1\t1\t0\t1\t2\nEND\t1\n'
+if mode == 'mismatch': mapping = mapping.replace('0\t1\t2', '0\t2\t1')
+if mode == 'invalid': mapping = mapping.replace('0\t1\t2', '0\t1\t1')
+if mode == 'truncated': mapping = mapping.rsplit('END', 1)[0]
+if mode == 'count': mapping = mapping.replace('MAP\t1\t1', 'MAP\t1\t2')
+if mode != 'missing': Path(str(p) + '.vertex-map').write_text(mapping)
+if mode == 'duplicate': print('RRM_NVERT=1')
+if master and mode == 'duplicate_ts': print('RRM_NTS=2')
+def count(key, value):
+    if mode == 'missing_' + key: return
+    print('RRM_' + key.upper() + '=' + ('bad' if mode == 'invalid_' + key else value), flush=True)
 if master:
     p.write_text(generation + '\n')
-    print('RRM_NVERT=1', flush=True)
-    print('RRM_NTS=' + os.environ.get('NTS', '2'), flush=True)
+    count('nvert', '1')
+    count('nts', os.environ.get('NTS', '2'))
     if os.environ.get('MASTER_FAIL'): sys.exit(9)
     if os.environ.get('PAUSE') == 'master': time.sleep(120)
 else:
@@ -36,7 +49,7 @@ else:
     if os.environ.get('PAUSE') == 'worker': time.sleep(120)
     if not (os.environ.get('MISSING_SHARD') and p.name.endswith('.1')):
         p.write_text(generation + '\n')
-    print('RRM_NVERT=' + ('2' if os.environ.get('MISMATCH') else '1'))
+    count('nvert', '2' if os.environ.get('MISMATCH') else '1')
 '''
 
 IO_WRAPPER = r'''
@@ -47,6 +60,7 @@ args = sys.argv[1:]
 target = args[-1] if args else ''
 mode = os.environ.get('FAIL_IO', '')
 if (name == 'mv' and ((mode == 'vertices' and target.endswith('/vertices.dat')) or
+                     (mode == 'map' and target.endswith('/vertices.dat.vertex-map')) or
                      (mode == 'current' and target.endswith('/current')))):
     sys.exit(73)
 if name == 'sha256sum' and mode == 'manifest': sys.exit(74)
@@ -117,6 +131,9 @@ class PublicationTests(unittest.TestCase):
             digest = hashlib.sha256((run / name).read_bytes()).hexdigest()
             self.assertIn(digest + '  ' + name, manifest)
         self.assertIn('nts=' + str(nts) + '\n', manifest)
+        mapping = run / 'vertices.dat.vertex-map'
+        self.assertIn('vertex_map_format=1\n', manifest)
+        self.assertIn('vertex_map_sha256=' + hashlib.sha256(mapping.read_bytes()).hexdigest(), manifest)
 
     def test_success_and_pinned_reader_retention(self):
         self.run_driver(GENERATION='old', RRM_KEEP_SHARDS='1')
@@ -129,6 +146,32 @@ class PublicationTests(unittest.TestCase):
             self.assertEqual(vertex, (old / 'vertices.dat').read_bytes())
         self.assertTrue((old / 'edges.dat.part.0').exists())
         self.assertFalse((self.snapshot() / 'edges.dat.part.0').exists())
+        self.assertTrue((old / 'edges.dat.part.0.vertex-map').exists())
+        self.assertFalse((self.snapshot() / 'edges.dat.part.0.vertex-map').exists())
+
+    def test_vertex_map_failures_preserve_published_pair(self):
+        for role in ('master', 'worker'):
+            modes = ['missing', 'invalid', 'truncated', 'count', 'duplicate',
+                     'missing_nvert', 'invalid_nvert']
+            modes += ['duplicate_ts', 'missing_nts', 'invalid_nts'] if role == 'master' else ['mismatch']
+            for mode in modes:
+                with self.subTest(role=role, mode=mode):
+                    self.bundle = self.base / (role + '-' + mode)
+                    env = dict(BAD_MAP=mode, BAD_ROLE=role)
+                    self.run_driver(ok=False, **env)
+                    self.assertFalse(os.path.lexists(self.bundle / 'current'))
+                    self.run_driver(GENERATION='old')
+                    old = self.snapshot()
+                    self.run_driver(ok=False, **env)
+                    self.assertEqual(self.snapshot(), old)
+                    self.check_pair(old)
+
+    def test_zero_ts_still_validates_master(self):
+        self.run_driver(GENERATION='old')
+        old = self.snapshot()
+        self.run_driver(ok=False, NTS='0', BAD_ROLE='master', BAD_MAP='missing')
+        self.assertEqual(self.snapshot(), old)
+        self.check_pair(old)
 
     def test_zero_ts(self):
         self.run_driver(GENERATION='old')
@@ -136,7 +179,7 @@ class PublicationTests(unittest.TestCase):
         self.check_pair(self.snapshot(), 'new', nts=0)
 
     def test_failures_preserve_old_pair_and_first_run_has_no_reference(self):
-        cases = [dict(FAIL_IO=x) for x in ('vertices', 'current', 'manifest', 'concat')]
+        cases = [dict(FAIL_IO=x) for x in ('vertices', 'map', 'current', 'manifest', 'concat')]
         cases += [{x: '1'} for x in ('MASTER_FAIL', 'WORKER_FAIL', 'MISSING_SHARD', 'MISMATCH')]
         for i, env in enumerate(cases):
             with self.subTest(env=env):
@@ -227,6 +270,7 @@ class PublicationTests(unittest.TestCase):
     def test_failed_concat_retains_shards(self):
         self.run_driver(ok=False, FAIL_IO='concat')
         self.assertTrue(list(self.bundle.glob('runs/*/edges.dat.part.0')))
+        self.assertTrue(list(self.bundle.glob('runs/*/edges.dat.part.0.vertex-map')))
         self.assertFalse(os.path.lexists(self.bundle / 'current'))
 
     def test_worker_failure_cancels_siblings(self):

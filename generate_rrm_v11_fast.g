@@ -270,6 +270,39 @@ generate_rrm:=function(vfile, efile, sym, ur, urt, ss, org_eq, org_ts, labels...
 	return;
 end;;
 
+# Versioned, label-independent correspondence used by the parallel driver.
+# Use the actual built index, never a second transversal enumeration.
+RrmWriteVertexMap:=function(path, sym, ur, org_eq, built)
+	local stream, degree, i, j, canon, inverted, point;
+	stream:=OutputTextFile(path,false);
+	if stream=fail then
+		Print("Error, cannot write vertex map ",path,"\n");
+		FORCE_QUIT_GAP(1);
+	fi;
+	SetPrintFormattingStatus(stream,false);
+	degree:=LargestMovedPoint(sym);
+	AppendTo(stream,"RRM_VERTEX_MAP\t1\t",built.nvert,"\t",Length(ur),"\t",degree,"\n");
+	for i in [1..Length(ur)] do
+		inverted:=0;
+		if org_eq[i]<>i then inverted:=1; fi;
+		for j in [1..Length(built.rt[i])] do
+			canon:=CanonicalRightCosetElement(ur[i],built.rt[i][j]);
+			# Check that the correspondence also describes the edge lookup table.
+			if RrmVertexIndex(built.offset,built.idx,ur,i,canon)<>built.offset[i]+j then
+				Print("Error, vertex map disagrees with lookup index\n");
+				FORCE_QUIT_GAP(1);
+			fi;
+			AppendTo(stream,built.offset[i]+j,"\t",i,"\t",org_eq[i],"\t",inverted);
+			for point in [1..degree] do
+				AppendTo(stream,"\t",point^canon);
+			od;
+			AppendTo(stream,"\n");
+		od;
+	od;
+	AppendTo(stream,"END\t",built.nvert,"\n");
+	CloseStream(stream);
+end;;
+
 generate_rrm_vertices:=function(vfile, sym, ur, urt, ss, org_eq, org_ts, labels...)
 	local vlabel, built;
 	if Length(labels)=0 then
@@ -280,16 +313,14 @@ generate_rrm_vertices:=function(vfile, sym, ur, urt, ss, org_eq, org_ts, labels.
 	built:=RrmBuildTransversals(sym, ur);
 	RrmCheckPechukas(sym, ur, urt, ss, org_eq, org_ts, built.rt);
 	RrmWriteVertices(vfile, ur, org_eq, built.rt, vlabel);
+	RrmWriteVertexMap(Concatenation(vfile,".vertex-map"),sym,ur,org_eq,built);
 	Print("RRM_NVERT=", built.nvert, "\n");
 	Print("RRM_NTS=", Length(ss), "\n");
 	return built.nvert;
 end;;
 
-# Workers recompute RrmBuildTransversals independently. Edge ids match the
-# master's vertex file only if RightTransversal(sym, ur[i]) enumerates the
-# same order in every process (GAP -r, same Reads, same first call).
-# RRM_NVERT checks counts, not permutation of rt[i]. org_eq is unused here
-# and kept for generate_rrm signature parity.
+# Workers rebuild independently; the driver validates ordered vertex maps and
+# compares their SHA-256 digests before publishing any generation.
 generate_rrm_edge_shard:=function(efile, lo, hi, sym, ur, urt, ss, org_eq, org_ts, labels...)
 	local elabel, built;
 	elabel:=true;
@@ -298,7 +329,7 @@ generate_rrm_edge_shard:=function(efile, lo, hi, sym, ur, urt, ss, org_eq, org_t
 	fi;
 	built:=RrmBuildTransversals(sym, ur);
 	RrmWriteEdges(efile, sym, urt, ss, org_ts, built.offset, built.idx, ur, elabel, lo, hi);
+	RrmWriteVertexMap(Concatenation(efile,".vertex-map"),sym,ur,org_eq,built);
 	Print("RRM_NVERT=", built.nvert, "\n");
 	return built.nvert;
 end;;
-
