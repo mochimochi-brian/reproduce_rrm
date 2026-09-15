@@ -21,8 +21,27 @@ serialized, not its inverse used in display labels.
 
 `generate_rrm_vertices` and `generate_rrm_edge_shard` keep their arguments and
 return values and additionally write `<output-path>.vertex-map`. Labels do not
-affect these files. `generate_rrm` and the `GAP_WORKERS=1` driver path do not
-create correspondence tables or invoke the validator.
+affect these files. Direct-file output through `generate_rrm` or the
+`GAP_WORKERS=1` driver does not create a correspondence table or validate it.
+
+## Sequential bundles
+
+`GAP_WORKERS=1 --bundle OUTPUT_DIR GFILE` calls `generate_rrm_bundle` once in
+one GAP process. It builds one index, checks Pechukas, writes both labeled dat
+files, and serializes the same `built` record to `vertices.dat.vertex-map`.
+`RRM_NVERT` and `RRM_NTS` are emitted only after all these writes finish. Missing
+or malformed completion counts, a GAP failure, or an invalid table prevents
+publication. The shell validates the table and uses the same writer lock,
+manifest, `current` rename and retained-generation rules as parallel bundles.
+No edge workers or shards are created, and there is no cross-process digest
+comparison in this mode.
+
+The manifest remains format 1 with the same fields and final two checksum
+lines. `workers=1` denotes the single edge-producing GAP process, including an
+empty edge file at TS=0. Parallel bundles retain their existing active edge
+worker count (zero for TS=0). Readers resolve `current` once and use that fixed
+generation path for both files, regardless of which producer wrote the bundle.
+There is no automatic resume of an interrupted generation.
 
 ## Exact byte format
 
@@ -71,7 +90,7 @@ records, count mismatch, or digest mismatch. It reads one row at a time and
 keeps O(DEGREE) data, not the full map. Python 3.9+ is required; no packages are
 needed beyond its standard library.
 
-The driver requires exactly one canonical nonnegative integer `RRM_NVERT` from
+In parallel mode, the driver requires one canonical nonnegative integer `RRM_NVERT` from
 each GAP process, and exactly one `RRM_NTS` from the master. It validates the
 master before starting workers. For TS=0, it still validates the master, then
 publishes an empty edge file with zero active workers. Requested worker counts
@@ -95,6 +114,9 @@ or interruption after the rename can leave these temporary files and return
 nonzero even though the complete validated generation has been published.
 
 ## Cost
+
+Sequential bundles serialize and validate one table (the K=0 case below); their
+vertex index is built once. Direct sequential output does not pay this cost.
 
 Each of the master and K active workers makes an additional pass over N vertices
 to canonicalize, check the lookup, and write D point images per vertex. Beyond

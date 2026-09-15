@@ -17,8 +17,9 @@ FAKE_GAP = r'''
 import json, os, re, sys, time
 from pathlib import Path
 s = sys.stdin.read()
-master = 'generate_rrm_vertices(' in s
-name = 'generate_rrm_vertices' if master else 'generate_rrm_edge_shard'
+sequential = 'generate_rrm_bundle(' in s
+master = sequential or 'generate_rrm_vertices(' in s
+name = 'generate_rrm_bundle' if sequential else ('generate_rrm_vertices' if master else 'generate_rrm_edge_shard')
 m = re.search(name + r'\(("(?:\\.|[^"\\])*")', s)
 p = Path(json.loads(m[1]))
 if os.environ.get('PID_LOG'):
@@ -46,6 +47,14 @@ if master:
         p.write_text('partial')
         sys.exit(73)
     p.write_text(generation + '\n')
+    if sequential:
+        args = re.search(name + r'\(("(?:\\.|[^"\\])*")\s*,\s*("(?:\\.|[^"\\])*")', s)
+        edge = Path(json.loads(args[2]))
+        if os.environ.get('FAIL_IO') == 'edges':
+            edge.write_text('partial')
+            sys.exit(73)
+        if not os.environ.get('MISSING_EDGES'):
+            edge.write_text('' if os.environ.get('NTS') == '0' else generation + '\n')
     count('nvert', '1')
     count('nts', os.environ.get('NTS', '2'))
     if os.environ.get('MASTER_FAIL'): sys.exit(9)
@@ -82,7 +91,7 @@ os.execv('/usr/bin/' + name, [name, *args])
 '''
 
 
-class PublicationTests(unittest.TestCase):
+class BundleChecks:
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='rrm-publication-', dir='/tmp')
         self.addCleanup(self.tmp.cleanup)
@@ -98,7 +107,7 @@ class PublicationTests(unittest.TestCase):
         self.input = self.base / 'input.g'
         self.input.touch()
         self.env = {**os.environ, 'GAP': str(self.bin / 'gap'),
-                    'GAP_WORKERS': '2', 'MEM': '1g',
+                    'GAP_WORKERS': str(self.workers), 'MEM': '1g',
                     'PATH': str(self.bin) + ':' + os.environ['PATH']}
         for key in ('RRM_KEEP_SHARDS', 'RRM_TEST_LAUNCH_DELAY',
                     'RRM_TEST_PID_REGISTER_DELAY'):
@@ -130,18 +139,21 @@ class PublicationTests(unittest.TestCase):
 
     def check_pair(self, run, generation='old', nts=2):
         self.assertEqual((run / 'vertices.dat').read_text(), generation + '\n')
-        self.assertEqual((run / 'edges.dat').read_text(), (generation + '\n') * min(2, nts))
+        active = 1 if self.workers == 1 else min(2, nts)
+        self.assertEqual((run / 'edges.dat').read_text(), (generation + '\n') * min(active, nts))
         manifest = (run / 'manifest.txt').read_text()
         for name in ('vertices.dat', 'edges.dat'):
             digest = hashlib.sha256((run / name).read_bytes()).hexdigest()
             self.assertIn(digest + '  ' + name, manifest)
         self.assertIn('nts=' + str(nts) + '\n', manifest)
+        self.assertIn('workers=' + str(active) + '\n', manifest)
         mapping = run / 'vertices.dat.vertex-map'
         self.assertIn('vertex_map_format=1\n', manifest)
         self.assertIn('vertex_map_sha256=' + hashlib.sha256(mapping.read_bytes()).hexdigest(), manifest)
 
     def test_success_and_pinned_reader_retention(self):
-        self.run_driver(GENERATION='old', RRM_KEEP_SHARDS='1')
+        pid_log = self.base / 'pids'
+        self.run_driver(GENERATION='old', RRM_KEEP_SHARDS='1', PID_LOG=str(pid_log))
         old = self.snapshot()
         vertex = (old / 'vertices.dat').read_bytes()
         for i in range(3):
@@ -149,14 +161,15 @@ class PublicationTests(unittest.TestCase):
             self.check_pair(self.snapshot(), 'new')
             self.check_pair(old)
             self.assertEqual(vertex, (old / 'vertices.dat').read_bytes())
-        self.assertTrue((old / 'edges.dat.part.0').exists())
+        self.assertEqual(len(pid_log.read_text().splitlines()), 1 if self.workers == 1 else 3)
+        self.assertEqual((old / 'edges.dat.part.0').exists(), self.workers > 1)
         self.assertFalse((self.snapshot() / 'edges.dat.part.0').exists())
-        self.assertTrue((old / 'edges.dat.part.0.vertex-map').exists())
+        self.assertEqual((old / 'edges.dat.part.0.vertex-map').exists(), self.workers > 1)
         self.assertFalse((self.snapshot() / 'edges.dat.part.0.vertex-map').exists())
-        self.assertTrue((self.snapshot() / 'edges.dat.part.0.log').exists())
+        self.assertEqual((self.snapshot() / 'edges.dat.part.0.log').exists(), self.workers > 1)
 
     def test_vertex_map_failures_preserve_published_pair(self):
-        for role in ('master', 'worker'):
+        for role in (('master',) if self.workers == 1 else ('master', 'worker')):
             modes = ['missing', 'invalid', 'truncated', 'count', 'duplicate',
                      'missing_nvert', 'invalid_nvert']
             modes += ['duplicate_ts', 'missing_nts', 'invalid_nts'] if role == 'master' else ['mismatch']
@@ -185,8 +198,12 @@ class PublicationTests(unittest.TestCase):
         self.check_pair(self.snapshot(), 'new', nts=0)
 
     def test_failures_preserve_old_pair_and_first_run_has_no_reference(self):
-        cases = [dict(FAIL_IO=x) for x in ('vertices', 'map', 'current', 'manifest', 'concat')]
-        cases += [{x: '1'} for x in ('MASTER_FAIL', 'WORKER_FAIL', 'MISSING_SHARD', 'MISMATCH')]
+        failures = ['vertices', 'map', 'current', 'manifest']
+        failures += ['edges'] if self.workers == 1 else ['concat']
+        cases = [dict(FAIL_IO=x) for x in failures]
+        flags = ['MASTER_FAIL']
+        flags += ['MISSING_EDGES'] if self.workers == 1 else ['WORKER_FAIL', 'MISSING_SHARD', 'MISMATCH']
+        cases += [{x: '1'} for x in flags]
         for i, env in enumerate(cases):
             with self.subTest(env=env):
                 self.bundle = self.base / ('case' + str(i))
@@ -211,34 +228,9 @@ class PublicationTests(unittest.TestCase):
                     self.check_pair(old)
                     self.check_pair(self.snapshot(), 'old' if phase == 'before' else 'new')
 
-    def test_legacy_parallel_interface_rejected_without_modification(self):
-        v, e = self.base / 'v.dat', self.base / 'e.dat'
-        v.write_text('old vertices')
-        e.write_text('old edges')
-        result = subprocess.run([str(DRIVER), str(v), str(e), str(self.input)],
-                                env=self.env, capture_output=True, timeout=10)
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn(b'--bundle', result.stderr)
-        self.assertEqual(v.read_text(), 'old vertices')
-        self.assertEqual(e.read_text(), 'old edges')
-
-    def test_historical_second_move_failure_reproduces_mixed_pair(self):
-        # Frozen pre-fix publication order from Issue #15. The current driver
-        # writes into a new generation; the full-driver cases inject write failures.
-        v, e = self.base / 'vertices.dat', self.base / 'edges.dat'
-        vs, es = self.base / 'v.staging', self.base / 'e.concat'
-        for p, value in ((v, 'old'), (e, 'old'), (vs, 'new'), (es, 'new')):
-            p.write_text(value)
-        result = subprocess.run(['/bin/bash', '--noprofile', '--norc', '-ec', 'mv "$1" "$2"; mv "$3" "$4"',
-                                 'legacy', str(es), str(e), str(vs), str(v)],
-                                env={**self.env, 'FAIL_IO': 'vertices', 'BASH_ENV': '/dev/null'},
-                                capture_output=True, timeout=10)
-        self.assertEqual(result.returncode, 73, result.stderr)
-        self.assertEqual((v.read_text(), e.read_text()), ('old', 'new'))
-
     def test_signals_kill_children_and_preserve_pair(self):
         for sig in (signal.SIGINT, signal.SIGTERM):
-            for phase in ('master', 'worker', 'registration'):
+            for phase in (('master', 'registration') if self.workers == 1 else ('master', 'worker', 'registration')):
                 with self.subTest(signal=sig, phase=phase):
                     self.run_driver(GENERATION='old')
                     old = self.snapshot()
@@ -273,6 +265,51 @@ class PublicationTests(unittest.TestCase):
                         stat = Path('/proc') / pid / 'stat'
                         self.assertTrue(not stat.exists() or stat.read_text().split()[2] == 'Z', pid)
 
+    def test_invalid_keep_shards_and_bundle_layout(self):
+        self.run_driver(ok=False, RRM_KEEP_SHARDS='yes')
+        self.assertFalse(os.path.lexists(self.bundle / 'current'))
+        self.bundle.mkdir(exist_ok=True)
+        (self.bundle / 'current').write_text('user file')
+        self.run_driver(ok=False)
+        self.assertEqual((self.bundle / 'current').read_text(), 'user file')
+
+    def test_writer_lock(self):
+        self.bundle.mkdir()
+        import fcntl
+        with open(self.bundle / '.writer.lock', 'w') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            self.run_driver(ok=False)
+        self.assertFalse(os.path.lexists(self.bundle / 'current'))
+
+
+class PublicationTests(BundleChecks, unittest.TestCase):
+    workers = 2
+
+    def test_legacy_parallel_interface_rejected_without_modification(self):
+        v, e = self.base / 'v.dat', self.base / 'e.dat'
+        v.write_text('old vertices')
+        e.write_text('old edges')
+        result = subprocess.run([str(DRIVER), str(v), str(e), str(self.input)],
+                                env=self.env, capture_output=True, timeout=10)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(b'--bundle', result.stderr)
+        self.assertEqual(v.read_text(), 'old vertices')
+        self.assertEqual(e.read_text(), 'old edges')
+
+    def test_historical_second_move_failure_reproduces_mixed_pair(self):
+        # Frozen pre-fix publication order from Issue #15. The current driver
+        # writes into a new generation; the full-driver cases inject write failures.
+        v, e = self.base / 'vertices.dat', self.base / 'edges.dat'
+        vs, es = self.base / 'v.staging', self.base / 'e.concat'
+        for p, value in ((v, 'old'), (e, 'old'), (vs, 'new'), (es, 'new')):
+            p.write_text(value)
+        result = subprocess.run(['/bin/bash', '--noprofile', '--norc', '-ec', 'mv "$1" "$2"; mv "$3" "$4"',
+                                 'legacy', str(es), str(e), str(vs), str(v)],
+                                env={**self.env, 'FAIL_IO': 'vertices', 'BASH_ENV': '/dev/null'},
+                                capture_output=True, timeout=10)
+        self.assertEqual(result.returncode, 73, result.stderr)
+        self.assertEqual((v.read_text(), e.read_text()), ('old', 'new'))
+
     def test_failed_concat_retains_shards(self):
         self.run_driver(ok=False, FAIL_IO='concat')
         self.assertTrue(list(self.bundle.glob('runs/*/edges.dat.part.0')))
@@ -292,21 +329,9 @@ class PublicationTests(unittest.TestCase):
             stat = Path('/proc') / pid / 'stat'
             self.assertTrue(not stat.exists() or stat.read_text().split()[2] == 'Z', pid)
 
-    def test_invalid_keep_shards_and_bundle_layout(self):
-        self.run_driver(ok=False, RRM_KEEP_SHARDS='yes')
-        self.assertFalse(os.path.lexists(self.bundle / 'current'))
-        self.bundle.mkdir(exist_ok=True)
-        (self.bundle / 'current').write_text('user file')
-        self.run_driver(ok=False)
-        self.assertEqual((self.bundle / 'current').read_text(), 'user file')
 
-    def test_writer_lock(self):
-        self.bundle.mkdir()
-        import fcntl
-        with open(self.bundle / '.writer.lock', 'w') as lock:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            self.run_driver(ok=False)
-        self.assertFalse(os.path.lexists(self.bundle / 'current'))
+class SequentialPublicationTests(BundleChecks, unittest.TestCase):
+    workers = 1
 
 
 if __name__ == '__main__':

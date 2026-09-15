@@ -11,8 +11,8 @@
 # batch stop. A Pechukas violation also FORCE_QUIT_GAP(1) before writing dat
 # files. Set RRM_CONTINUE_ON_PECHUKAS=1 (or GAP variable
 # RRM_CONTINUE_ON_PECHUKAS:=true) to restore v11 print-and-continue.
-# Optional workers: generate_rrm_vertices and generate_rrm_edge_shard are
-# called by generate_rrm_v11_parallel.sh. Sequential generate_rrm is unchanged.
+# The driver uses generate_rrm_bundle for a sequential bundle, or
+# generate_rrm_vertices and generate_rrm_edge_shard for parallel bundles.
 #
 # vfile : file to save vertex information
 # efile : file to save edge information
@@ -268,6 +268,19 @@ RrmWriteVertexMap:=function(path, sym, ur, org_eq, built)
 	od;
 	AppendTo(stream,"END\t",built.nvert,"\n");
 	CloseStream(stream);
+end;;
+
+# Sequential bundle preparation shares one index for both files and the map.
+# Counts are completion records: emit them only after all three writes return.
+generate_rrm_bundle:=function(vfile, efile, sym, ur, urt, ss, org_eq, org_ts)
+	local built;
+	built:=RrmBuildTransversals(sym, ur);
+	RrmCheckPechukas(sym, ur, urt, ss, org_eq, org_ts, built.rt);
+	RrmWriteVertices(vfile, ur, org_eq, built.rt, true);
+	RrmWriteEdges(efile, sym, urt, ss, org_ts, built.offset, built.idx, ur, true, 1, Length(ss));
+	RrmWriteVertexMap(Concatenation(vfile,".vertex-map"),sym,ur,org_eq,built);
+	Print("RRM_NVERT=", built.nvert, "\n");
+	Print("RRM_NTS=", Length(ss), "\n");
 end;;
 
 generate_rrm_vertices:=function(vfile, sym, ur, urt, ss, org_eq, org_ts, labels...)
