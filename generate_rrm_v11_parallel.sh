@@ -1,7 +1,8 @@
 #!/bin/bash
-# Optional process-parallel edge writes for generate_rrm_v11_fast.g.
+# Sequential and process-parallel output for generate_rrm_v11_fast.g.
 # Not a new Teramoto version of generate_rrm_v11.g.
 # Default GAP_WORKERS=1 is the sequential generate_rrm path.
+# --bundle publishes a complete generation with any positive worker count.
 # GAP_WORKERS=k>1: master writes vertices (and Pechukas); workers write TS shards.
 # Edge shards are deleted after concat unless RRM_KEEP_SHARDS=1.
 set -euo pipefail
@@ -145,18 +146,18 @@ fi
 bundle=""
 if [[ "${1:-}" == --bundle ]]; then
     if [[ $# -ne 3 ]]; then
-        echo "Usage: GAP_WORKERS=2 $0 --bundle OUTPUT_DIR GFILE" >&2
+        echo "Usage: $0 --bundle OUTPUT_DIR GFILE (GAP_WORKERS defaults to 1)" >&2
         exit 1
     fi
     bundle="$2"
     GFILE="$3"
-    if [[ "$GAP_WORKERS" == 1 ]]; then
-        echo "--bundle requires GAP_WORKERS>1" >&2
+    if [[ -z "$bundle" ]]; then
+        echo "bundle output directory must not be empty" >&2
         exit 1
     fi
 else
     if [[ $# -ne 3 ]]; then
-        echo "Usage: $0 VFILE EFILE GFILE (GAP_WORKERS=1), or --bundle OUTPUT_DIR GFILE (GAP_WORKERS>1)" >&2
+        echo "Usage: $0 VFILE EFILE GFILE (GAP_WORKERS=1), or --bundle OUTPUT_DIR GFILE" >&2
         exit 1
     fi
     VFILE="$1"
@@ -185,7 +186,7 @@ fi
 gap_src="$(rrm_gap_string "$GAPSRC")"
 gap_g="$(rrm_gap_string "$GFILE")"
 
-if [[ "$GAP_WORKERS" -eq 1 ]]; then
+if [[ -z "$bundle" ]]; then
     gap_e="$(rrm_gap_string "$EFILE")"
     gap_v="$(rrm_gap_string "$VFILE")"
     "$GAP" -b -q -r -m "$MEM" <<EOF
@@ -208,7 +209,7 @@ if [[ -n "${RRM_KEEP_SHARDS:-}" ]]; then
 fi
 
 # Serialize writers to a bundle. Readers do not acquire this lock.
-command -v python3 >/dev/null || { echo "parallel validation requires python3" >&2; exit 1; }
+command -v python3 >/dev/null || { echo "bundle validation requires python3" >&2; exit 1; }
 mkdir -p -- "$bundle"
 bundle="$(cd -- "$bundle" && pwd -P)"
 exec {bundle_lock}>"$bundle/.writer.lock"
@@ -236,6 +237,12 @@ publish_link="$run_dir/current.tmp"
 
 master_map="${VFILE}.vertex-map"
 gap_v="$(rrm_gap_string "$VFILE")"
+if [[ "$GAP_WORKERS" -eq 1 ]]; then
+    gap_e="$(rrm_gap_string "$EFILE")"
+    gap_generate="generate_rrm_bundle(${gap_v},${gap_e},symc,ur,urt,ss,org_eq,org_ts);"
+else
+    gap_generate="generate_rrm_vertices(${gap_v},symc,ur,urt,ss,org_eq,org_ts,true);"
+fi
 
 master_pid=""
 pids=()
@@ -262,7 +269,7 @@ master_log="${VFILE}.master.log"
 "$GAP" -b -q -r -m "$MEM" <<EOF >"$master_log" 2>&1 &
 Read(${gap_src});
 Read(${gap_g});
-generate_rrm_vertices(${gap_v},symc,ur,urt,ss,org_eq,org_ts,true);
+${gap_generate}
 QUIT;
 EOF
 rrm_after_bg
@@ -283,6 +290,13 @@ fi
 nvert="$(rrm_count_from_log "$master_log" RRM_NVERT)"
 nts="$(rrm_count_from_log "$master_log" RRM_NTS)"
 map_digest="$(python3 "$ROOT/check_rrm_vertex_map.py" "$nvert" "$master_map")"
+
+if [[ "$GAP_WORKERS" -eq 1 ]]; then
+    # One process wrote the complete pair; no index rebuild or edge shards.
+    active=1
+    rrm_publish_pair
+    exit 0
+fi
 
 active="$(rrm_active_workers "$GAP_WORKERS" "$nts")"
 

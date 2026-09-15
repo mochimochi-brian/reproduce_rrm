@@ -120,22 +120,8 @@ EOF
 }
 
 run_parallel() {
-    # gfile bundle_or_prefix workers -> prints "VFILE EFILE"
+    # gfile bundle workers -> prints "VFILE EFILE"
     local gfile="$1" dest="$2" workers="$3" rc=0
-    if [[ "$workers" -eq 1 ]]; then
-        set +e
-        GAP="$GAP" MEM="$MEM" GAP_WORKERS=1 \
-            "$DRIVER" "${dest}_v.dat" "${dest}_e.dat" "$gfile" >"${dest}.log" 2>&1
-        rc=$?
-        set -e
-        if [[ "$rc" -ne 0 ]]; then
-            echo "driver GAP_WORKERS=1 failed (exit $rc)" >&2
-            cat "${dest}.log" >&2
-            exit 1
-        fi
-        printf '%s %s\n' "${dest}_v.dat" "${dest}_e.dat"
-        return 0
-    fi
     rm -rf "$dest"
     set +e
     GAP="$GAP" MEM="$MEM" GAP_WORKERS="$workers" \
@@ -390,16 +376,50 @@ if [[ -e "$OUT/aucu4/default_v.dat" || -e "$OUT/aucu4/default_e.dat" ]]; then
     echo "AuCu4 default policy must not write dat files" >&2
     exit 1
 fi
-set +e
-GAP="$GAP" MEM="$MEM" GAP_WORKERS=2 \
-    "$DRIVER" --bundle "$OUT/aucu4/default_bundle" "$AUCU4" >"$OUT/aucu4/default_par.log" 2>&1
-default_par_rc=$?
-set -e
-if [[ "$default_par_rc" -eq 0 || -L "$OUT/aucu4/default_bundle/current" ]]; then
-    echo "parallel AuCu4 must fail closed and publish nothing" >&2
-    cat "$OUT/aucu4/default_par.log" >&2
+for w in 1 2; do
+    bundle="$OUT/aucu4/default_bundle${w}"
+    set +e
+    GAP="$GAP" MEM="$MEM" GAP_WORKERS="$w" \
+        "$DRIVER" --bundle "$bundle" "$AUCU4" >"$OUT/aucu4/default_par${w}.log" 2>&1
+    default_par_rc=$?
+    set -e
+    if [[ "$default_par_rc" -eq 0 || -L "$bundle/current" ]]; then
+        echo "AuCu4 must fail closed and publish nothing (workers=$w)" >&2
+        cat "$OUT/aucu4/default_par${w}.log" >&2
+        exit 1
+    fi
+    # The same failure must also preserve an existing reader's generation.
+    parallel_pair "$FIXTURE" "$bundle" "$w"
+    previous="$(readlink -e -- "$bundle/current")"
+    if GAP="$GAP" MEM="$MEM" GAP_WORKERS="$w" \
+        "$DRIVER" --bundle "$bundle" "$AUCU4" >"$OUT/aucu4/retry${w}.log" 2>&1; then
+        echo "AuCu4 unexpectedly succeeded (workers=$w)" >&2
+        exit 1
+    fi
+    test "$(readlink -e -- "$bundle/current")" = "$previous"
+    expect_identical "Pechukas failure preserves published pair, workers=$w" \
+        "$GOLD_V" "$GOLD_E" "$previous/vertices.dat" "$previous/edges.dat"
+done
+
+echo "== sequential bundle: GAP error after partial edge output =="
+cat >"$OUT/partial_error.g" <<EOF
+Read("${FIXTURE}");
+RrmWriteEdges:=function(args...)
+    PrintTo(args[1],"partial edges\n");
+    Error("injected error after starting edge output");
+end;;
+EOF
+bundle="$OUT/partial_error_bundle"
+parallel_pair "$FIXTURE" "$bundle" 1
+previous="$(readlink -e -- "$bundle/current")"
+if GAP="$GAP" MEM="$MEM" GAP_WORKERS=1 \
+    "$DRIVER" --bundle "$bundle" "$OUT/partial_error.g" >"$OUT/partial_error.log" 2>&1; then
+    echo "GAP error must not publish a partial pair" >&2
     exit 1
 fi
-echo "  ok: default policy exits non-zero and publishes nothing (exit $default_rc / $default_par_rc)"
+grep -q "injected error" "$OUT/partial_error.log"
+test "$(readlink -e -- "$bundle/current")" = "$previous"
+expect_identical "GAP error preserves published pair" \
+    "$GOLD_V" "$GOLD_E" "$previous/vertices.dat" "$previous/edges.dat"
 
 echo "PASS"
