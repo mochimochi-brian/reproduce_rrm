@@ -22,14 +22,14 @@ SOURCES = {"v11": "generate_rrm_v11.g", "fast": "generate_rrm_v11_fast.g"}
 LABELS = ["", "true", "false", "true,true", "true,false", "false,true", "false,false"]
 
 
-def run_gap(args, out, tag, body):
+def run_gap(args, out, tag, body, timeout=300):
     script = out / (tag + ".g")
     script.write_text(body + '\nPrint("RRM_TEST_DONE\\n");\nQUIT;\n')
     started = time.perf_counter()
     with (out / (tag + ".log")).open("w") as log:
         result = subprocess.run(
             [args.gap, "-T", "-b", "-q", "-r", "-m", args.memory, str(script)],
-            cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, timeout=300, check=False,
+            cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, timeout=timeout, check=False,
         )
     elapsed = time.perf_counter() - started
     text = (out / (tag + ".log")).read_text()

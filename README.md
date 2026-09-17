@@ -97,6 +97,19 @@ Au5Ag and a synthetic scaling fixture; every timed output is also compared with
 v11. Logs and generated files are kept in a new directory under `/tmp`.
 See [validation and measurements](docs/results/sequential-speedup.md).
 
+For atom-count scaling with eight EQs and 30 TSs fixed, run:
+
+```bash
+python3 tests/benchmark_rrm_scaling.py --gap /path/to/gap
+```
+
+This extends the synthetic fixture to 6, 7 and 8 identical atoms plus one
+distinct atom (7, 8 and 9 atoms total), keeping its stabilizers and endpoint
+permutations fixed. Each completed output is checked against earlier completed
+runs. A process exceeding 300 seconds is recorded as a timeout and its remaining
+repetitions are skipped; use `--timeout` to change that limit. The report states
+whether a completed v11 reference was available for each input.
+
 ## Limitations
 * Sample data of GRRM output is in the directory Metal. The files required are `***EQ_list.log`, `***TS_list.log`, and `***TSn.log` (`n` is the indices of the transition states.).
 * As mentioned in the paper, the code does not support RRMs that include DC (dissociation channel) states or saddle connections.
