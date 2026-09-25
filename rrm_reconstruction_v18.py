@@ -43,9 +43,11 @@ def perm(list1,list2):
 
     return plist
 
-# judge whether the set of SymmOps sop contains a volume-inversion operation.
 # returns true if the molecule is chiral
-def wchiral(sop):
+def wchiral(sop, point_group):
+    # pymatgen omits the mirror planes from the C*v symmetry operations.
+    if point_group == 'C*v':
+        return False
     for sp in sop:
        if np.linalg.det(sp.rotation_matrix) < 0:
            return False
@@ -183,7 +185,7 @@ org_eq = list(range(neq))
 for ind, mol in enumerate(moleq):
     molsym = PointGroupAnalyzer(mol,tolerance=tol)
     sop = molsym.get_symmetry_operations()
-    wchiral_sop = wchiral(sop)
+    wchiral_sop = wchiral(sop, molsym.sch_symbol)
     if ind < neq and wchiral_sop:
         moleq.append(invmol(mol))
         inv.append(len(moleq)-1)
@@ -222,7 +224,7 @@ for ind, mol in enumerate(molts):
     molsym = PointGroupAnalyzer(mol,tolerance=tol)
     sop = molsym.get_symmetry_operations()
 
-    if ind < nts and (wchiral(sop) or weqchiral[gconns[ind][0]] == 'true' or weqchiral[gconns[ind][1]] == 'true'):
+    if ind < nts and (wchiral(sop, molsym.sch_symbol) or weqchiral[gconns[ind][0]] == 'true' or weqchiral[gconns[ind][1]] == 'true'):
         molts.append(invmol(mol))
         molrp.append([invmol(molrp[ind][0]),invmol(molrp[ind][1])])
         gconns.append(gconns[ind])
