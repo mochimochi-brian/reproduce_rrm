@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Extract the unique largest GRRM EQ/TS component for rrm_reconstruction_v18.py.
 
-Uses only Python 3.8+ standard libraries. Component traversal and renumbering
-follow the existing split_rrm_components.py workflow; molecular data stay intact.
+Uses only Python 3.8+ standard libraries; molecular data stay intact.
 """
 import argparse
 import json
@@ -123,7 +122,8 @@ def extract(prefix, output):
         ],
     }
 
-    # mkdir reserves a fresh destination; failures remove only this new directory.
+    # mkdir reserves a fresh destination; cleanup owns only this directory,
+    # not its potentially shared parents (which may remain after a failure).
     output.mkdir(parents=True)
     try:
         (output / "EQ_list.log").write_bytes(

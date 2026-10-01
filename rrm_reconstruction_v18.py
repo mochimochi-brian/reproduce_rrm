@@ -53,6 +53,15 @@ def wchiral(sop, point_group):
            return False
     return True
 
+# Atom permutations realizable by proper rotations (used for both EQ and TS).
+def rotation_permutations(mol, sop, point_group):
+    # A mirror plane containing a linear molecule fixes every atom. Composing
+    # it with an improper operation gives the same permutation by a rotation.
+    # Include inversion for D*h: pymatgen omits the equivalent C2 rotations.
+    linear = point_group in ('C*v', 'D*h')
+    return [[i+1 for i in perm(mol.cart_coords, sp.operate_multi(mol.cart_coords))]
+            for sp in sop if linear or np.linalg.det(sp.rotation_matrix) > 0]
+
 # apply inversion to the molecule mol
 def invmol(mol):
     molsym = PointGroupAnalyzer(mol,tolerance=tol)
@@ -206,11 +215,8 @@ for ind, mol in enumerate(moleq):
 
         sinv.append(ip);
 
-    gp = 'Group(['
-    for sp in sop:
-        if np.linalg.det(sp.rotation_matrix) > 0:
-            gp = gp + 'PermList('+str([i+1 for i in perm(mol.cart_coords,sp.operate_multi(mol.cart_coords))])+'),'
-    gp = gp + '])'
+    gp = 'Group([' + ','.join('PermList('+str(p)+')' for p in
+                             rotation_permutations(mol, sop, molsym.sch_symbol)) + '])'
     G.add_node(ind,group=gp,org_eq=org_eq[ind])
 
 print("ur computation finished!!!")
@@ -230,19 +236,8 @@ for ind, mol in enumerate(molts):
         gconns.append(gconns[ind])
         org_ts.append(ind)
 
-    gp = 'Group(['
-    for sp in sop:
-        if np.linalg.det(sp.rotation_matrix) > 0:
-            # smol = mol.copy()
-            # smol.apply_operation(sp)
-            #smol = smol.get_centered_molecule()
-
-            # debug
-            # print(mol.cart_coords)
-            # print(smol.cart_coords)
-            gp = gp + 'PermList('+str([i+1 for i in perm(mol.cart_coords,sp.operate_multi(mol.cart_coords))])+'),'
-            # gp = gp + 'PermList('+str([i+1 for i in perm(mol.cart_coords,smol.cart_coords)])+'),'
-    gp = gp + '])'
+    gp = 'Group([' + ','.join('PermList('+str(p)+')' for p in
+                             rotation_permutations(mol, sop, molsym.sch_symbol)) + '])'
     urt.append(gp)
 
 print("urt computation finished!!!")
